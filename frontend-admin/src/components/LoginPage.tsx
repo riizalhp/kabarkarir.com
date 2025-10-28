@@ -1,22 +1,42 @@
 import React, { useState } from 'react';
 import { toast } from '../utils/toast';
+import { adminAuth } from '../lib/supabase';
 
 interface LoginPageProps {
-    onLoginSuccess: () => void;
+    onLoginSuccess: (user: any) => void;
 }
 
 const LoginPage: React.FC<LoginPageProps> = ({ onLoginSuccess }) => {
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
+    const [loading, setLoading] = useState(false);
 
-    const handleLogin = (e: React.FormEvent) => {
+    const handleLogin = async (e: React.FormEvent) => {
         e.preventDefault();
-        // Simple hardcoded credentials for demonstration
-        if (email === 'admin@kabarkarir.com' && password === 'password') {
-            toast('Login berhasil!');
-            onLoginSuccess();
-        } else {
-            toast('Email atau password salah.');
+        setLoading(true);
+
+        try {
+            // Authenticate with Supabase
+            const { user, session } = await adminAuth.signIn(email, password);
+            
+            // Get admin role
+            const adminRole = user?.app_metadata?.admin_role || 'Content Manager';
+            const adminName = user?.user_metadata?.name || email.split('@')[0];
+
+            toast('Login berhasil! Selamat datang, ' + adminName);
+            
+            // Pass user data to parent
+            onLoginSuccess({
+                id: user?.id,
+                email: user?.email,
+                name: adminName,
+                role: adminRole,
+            });
+        } catch (error: any) {
+            console.error('Login error:', error);
+            toast(error.message || 'Email atau password salah. Silakan coba lagi.');
+        } finally {
+            setLoading(false);
         }
     };
 
@@ -68,9 +88,17 @@ const LoginPage: React.FC<LoginPageProps> = ({ onLoginSuccess }) => {
                     <div>
                         <button
                             type="submit"
-                            className="group relative w-full flex justify-center py-2 px-4 border border-transparent text-sm font-medium rounded-md text-white bg-primary hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary"
+                            disabled={loading}
+                            className="group relative w-full flex justify-center py-2 px-4 border border-transparent text-sm font-medium rounded-md text-white bg-primary hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary disabled:opacity-50 disabled:cursor-not-allowed"
                         >
-                            Masuk
+                            {loading ? (
+                                <>
+                                    <i className="fas fa-spinner fa-spin mr-2"></i>
+                                    Memproses...
+                                </>
+                            ) : (
+                                'Masuk'
+                            )}
                         </button>
                     </div>
                 </form>

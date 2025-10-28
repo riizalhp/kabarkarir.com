@@ -26,7 +26,9 @@ interface AppRoutesProps {
   recentActivities: Activity[];
   addActivity: (activity: Omit<Activity, 'id' | 'timestamp'>) => void;
   isLoggedIn: boolean;
-  setIsLoggedIn: React.Dispatch<React.SetStateAction<boolean>>;
+  setIsLoggedIn: (loggedIn: boolean, user?: any) => void;
+  currentUser: any;
+  onLogout: () => void;
 }
 
 const AppRoutes: React.FC<AppRoutesProps> = ({
@@ -52,6 +54,8 @@ const AppRoutes: React.FC<AppRoutesProps> = ({
   addActivity,
   isLoggedIn,
   setIsLoggedIn,
+  currentUser,
+  onLogout,
 }) => {
   
   // Calculate companies with job count
@@ -69,9 +73,11 @@ const AppRoutes: React.FC<AppRoutesProps> = ({
       <Route 
         path="/login" 
         element={
-          isLoggedIn ? 
-          <Navigate to="/admin" replace /> : 
-          <LoginPage onLoginSuccess={() => setIsLoggedIn(true)} />
+          isLoggedIn ? (
+            <Navigate to="/admin" replace />
+          ) : (
+            <LoginPage onLoginSuccess={(user) => setIsLoggedIn(true, user)} />
+          )
         } 
       />
       
