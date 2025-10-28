@@ -1,7 +1,8 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import { MisiCuanOffer, Company, RecruitmentEvent, BlogPost } from '../types';
 import Sidebar from './Sidebar';
 import { formatRewardString, formatDisplayDate } from '../utils/formatting';
+import { injectJSONLD, updateMetaTags, generateMisiCuanSchema, generateBreadcrumbSchema, generateSlug } from '../utils/seo';
 
 interface MisiDetailPageProps {
   offer: MisiCuanOffer;
@@ -18,6 +19,31 @@ interface MisiDetailPageProps {
 
 const MisiDetailPage: React.FC<MisiDetailPageProps> = ({ offer, onStart, onNavigateToBlog, onNavigateToEventRecruitment, onSelectEvent, onSelectCompany, trendingCompanies, latestArticles, allEvents, isPreviewMode=false }) => {
     
+  // Inject SEO
+  useEffect(() => {
+    if (offer && !isPreviewMode) {
+      // Update page meta tags
+      updateMetaTags({
+        title: `${offer.title} - Misi Cuan ${offer.company} | KabarKarir.com`,
+        description: offer.description?.substring(0, 155) || `Dapatkan imbalan ${offer.reward} dengan menyelesaikan misi ${offer.title} dari ${offer.company}. Estimasi ${offer.time}.`,
+        keywords: `misi cuan, ${offer.title}, ${offer.company}, cuan online, side hustle, penghasilan tambahan`,
+        canonical: `https://www.kabarkarir.com/misi-cuan/${offer.slug || offer.id}`,
+        ogImage: offer.logo || 'https://www.kabarkarir.com/og-image.jpg',
+        ogType: 'article'
+      });
+
+      // Inject Misi Cuan Offer structured data
+      injectJSONLD(generateMisiCuanSchema(offer));
+
+      // Inject Breadcrumb structured data
+      injectJSONLD(generateBreadcrumbSchema([
+        { name: 'Beranda', url: 'https://www.kabarkarir.com/' },
+        { name: 'Misi Cuan', url: 'https://www.kabarkarir.com/misi-cuan' },
+        { name: offer.title, url: window.location.href }
+      ]));
+    }
+  }, [offer, isPreviewMode]);
+  
   const handleCompanyClick = (e: React.MouseEvent) => {
     e.preventDefault();
     e.stopPropagation();

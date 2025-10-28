@@ -2,6 +2,7 @@ import React, { useEffect } from 'react';
 import { BlogPost, Company, RecruitmentEvent } from '../types';
 import Sidebar from './Sidebar';
 import { viewTrackingService } from '../services/viewTracking';
+import { injectJSONLD, updateMetaTags, generateArticleSchema, generateBreadcrumbSchema, generateSlug } from '../utils/seo';
 
 interface ArticleDetailPageProps {
   post: BlogPost;
@@ -15,10 +16,31 @@ interface ArticleDetailPageProps {
 }
 
 const ArticleDetailPage: React.FC<ArticleDetailPageProps> = ({ post, onNavigateToBlog, onNavigateToEventRecruitment, onSelectEvent, isPreviewMode = false, trendingCompanies, latestArticles, allEvents }) => {
-  // Track blog post view
+  // Track blog post view and inject SEO
   useEffect(() => {
     if (post && !isPreviewMode) {
       viewTrackingService.trackBlogPostView(post.id);
+      
+      // Update page meta tags
+      updateMetaTags({
+        title: `${post.title} | Blog KabarKarir.com`,
+        description: post.description?.substring(0, 155) || `Baca artikel ${post.title} di blog KabarKarir.com. Temukan tips karir, panduan melamar kerja, dan informasi menarik seputar dunia kerja.`,
+        keywords: `${post.title}, ${post.category}, tips karir, panduan kerja, blog karir`,
+        canonical: `https://www.kabarkarir.com/blog/${post.id}/${generateSlug(post.title)}`,
+        ogImage: post.image || 'https://www.kabarkarir.com/og-image.jpg',
+        ogType: 'article'
+      });
+
+      // Inject Article structured data
+      injectJSONLD(generateArticleSchema(post));
+
+      // Inject Breadcrumb structured data
+      injectJSONLD(generateBreadcrumbSchema([
+        { name: 'Beranda', url: 'https://www.kabarkarir.com/' },
+        { name: 'Blog', url: 'https://www.kabarkarir.com/blog' },
+        { name: post.category, url: `https://www.kabarkarir.com/blog?category=${post.category}` },
+        { name: post.title, url: window.location.href }
+      ]));
     }
   }, [post, isPreviewMode]);
 

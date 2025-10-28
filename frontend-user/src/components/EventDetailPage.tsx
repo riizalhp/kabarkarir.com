@@ -3,6 +3,7 @@ import { RecruitmentEvent, Company, BlogPost } from '../types';
 import Sidebar from './Sidebar';
 import { toast } from '../utils/toast';
 import { viewTrackingService } from '../services/viewTracking';
+import { injectJSONLD, updateMetaTags, generateEventSchema, generateBreadcrumbSchema, generateSlug } from '../utils/seo';
 
 interface EventDetailPageProps {
   event: RecruitmentEvent;
@@ -19,10 +20,30 @@ interface EventDetailPageProps {
 const EventDetailPage: React.FC<EventDetailPageProps> = ({ event, onNavigateToBlog, onNavigateToEventRecruitment, onSelectEvent, onSelectCompany, isPreviewMode = false, trendingCompanies, latestArticles, allEvents }) => {
   const [activeTab, setActiveTab] = useState('Tentang Event');
 
-  // Track event view
+  // Track event view and inject SEO
   useEffect(() => {
     if (event && !isPreviewMode) {
       viewTrackingService.trackEventView(event.id);
+      
+      // Update page meta tags
+      updateMetaTags({
+        title: `${event.title} - Event Rekrutmen | KabarKarir.com`,
+        description: event.description?.substring(0, 155) || `Event rekrutmen ${event.title} akan diadakan pada ${event.date} di ${event.location}. Jangan lewatkan kesempatan berkarir!`,
+        keywords: `event rekrutmen, ${event.title}, ${event.organizer}, ${event.location}, job fair, career fair`,
+        canonical: `https://www.kabarkarir.com/event/${event.id}/${generateSlug(event.title)}`,
+        ogImage: event.image || 'https://www.kabarkarir.com/og-image.jpg',
+        ogType: 'event'
+      });
+
+      // Inject Event structured data
+      injectJSONLD(generateEventSchema(event));
+
+      // Inject Breadcrumb structured data
+      injectJSONLD(generateBreadcrumbSchema([
+        { name: 'Beranda', url: 'https://www.kabarkarir.com/' },
+        { name: 'Event Rekrutmen', url: 'https://www.kabarkarir.com/event' },
+        { name: event.title, url: window.location.href }
+      ]));
     }
   }, [event, isPreviewMode]);
 

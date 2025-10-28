@@ -90,21 +90,21 @@ const AppRoutes: React.FC<AppRoutesProps> = ({
       
       {/* Blog Routes */}
       <Route path="/blog" element={<BlogWrapper blogPosts={blogPosts} events={events} trendingCompanies={trendingCompanies} />} />
-      <Route path="/blog/:id" element={<ArticleDetailWrapper blogPosts={blogPosts} events={events} trendingCompanies={trendingCompanies} />} />
+      <Route path="/blog/:slug" element={<ArticleDetailWrapper blogPosts={blogPosts} events={events} trendingCompanies={trendingCompanies} />} />
       
       {/* Misi Cuan Routes */}
       <Route path="/misi-cuan" element={<MisiCuanWrapper misiOffers={misiOffers} blogPosts={blogPosts} events={events} trendingCompanies={trendingCompanies} />} />
-      <Route path="/misi-cuan/:id" element={<MisiDetailWrapper misiOffers={misiOffers} blogPosts={blogPosts} events={events} trendingCompanies={trendingCompanies} companies={companies} />} />
-      <Route path="/misi-cuan/:id/tahapan" element={<MisiStepsWrapper misiOffers={misiOffers} />} />
-      <Route path="/misi-cuan/:id/submit" element={<MisiSubmissionWrapper misiOffers={misiOffers} />} />
+      <Route path="/misi-cuan/:slug" element={<MisiDetailWrapper misiOffers={misiOffers} blogPosts={blogPosts} events={events} trendingCompanies={trendingCompanies} companies={companies} />} />
+      <Route path="/misi-cuan/:slug/tahapan" element={<MisiStepsWrapper misiOffers={misiOffers} />} />
+      <Route path="/misi-cuan/:slug/submit" element={<MisiSubmissionWrapper misiOffers={misiOffers} />} />
       
       {/* Event Routes */}
       <Route path="/event" element={<EventRecruitmentWrapper events={events} blogPosts={blogPosts} trendingCompanies={trendingCompanies} />} />
-      <Route path="/event/:id" element={<EventDetailWrapper events={events} blogPosts={blogPosts} trendingCompanies={trendingCompanies} companies={companies} />} />
+      <Route path="/event/:slug" element={<EventDetailWrapper events={events} blogPosts={blogPosts} trendingCompanies={trendingCompanies} companies={companies} />} />
       
       {/* Pelatihan Routes */}
       <Route path="/pelatihan" element={<PelatihanWrapper courses={courses} blogPosts={blogPosts} events={events} trendingCompanies={trendingCompanies} />} />
-      <Route path="/pelatihan/:id" element={<PelatihanDetailWrapper courses={courses} blogPosts={blogPosts} events={events} trendingCompanies={trendingCompanies} />} />
+      <Route path="/pelatihan/:slug" element={<PelatihanDetailWrapper courses={courses} blogPosts={blogPosts} events={events} trendingCompanies={trendingCompanies} />} />
       
       {/* Service Routes */}
       <Route path="/konsul-karir" element={<KonsulKarirPage />} />
@@ -224,8 +224,13 @@ const BlogWrapper: React.FC<any> = ({ blogPosts, events, trendingCompanies }) =>
 };
 
 const ArticleDetailWrapper: React.FC<any> = ({ blogPosts, events, trendingCompanies }) => {
-  const { id } = useParams<{ id: string }>();
-  const selectedArticle = blogPosts.find((post: BlogPost) => post.id === Number(id));
+  const { slug } = useParams<{ slug: string }>();
+  
+  // Try to find by slug first, then by ID for backwards compatibility
+  let selectedArticle = blogPosts.find((post: BlogPost) => post.slug === slug);
+  if (!selectedArticle && !isNaN(Number(slug))) {
+    selectedArticle = blogPosts.find((post: BlogPost) => post.id === Number(slug));
+  }
   
   if (!selectedArticle) return <div className="container mx-auto px-4 py-8"><h2>Artikel tidak ditemukan</h2></div>;
   
@@ -258,8 +263,13 @@ const MisiCuanWrapper: React.FC<any> = ({ misiOffers, blogPosts, events, trendin
 };
 
 const MisiDetailWrapper: React.FC<any> = ({ misiOffers, blogPosts, events, trendingCompanies, companies }) => {
-  const { id } = useParams<{ id: string }>();
-  const selectedMisi = misiOffers.find((offer: MisiCuanOffer) => offer.id === Number(id));
+  const { slug } = useParams<{ slug: string }>();
+  
+  // Try to find by slug first, then by ID for backwards compatibility
+  let selectedMisi = misiOffers.find((offer: MisiCuanOffer) => offer.slug === slug);
+  if (!selectedMisi && !isNaN(Number(slug))) {
+    selectedMisi = misiOffers.find((offer: MisiCuanOffer) => offer.id === Number(slug));
+  }
   
   if (!selectedMisi) return <div className="container mx-auto px-4 py-8"><h2>Misi tidak ditemukan</h2></div>;
   
@@ -279,8 +289,13 @@ const MisiDetailWrapper: React.FC<any> = ({ misiOffers, blogPosts, events, trend
 };
 
 const MisiStepsWrapper: React.FC<any> = ({ misiOffers }) => {
-  const { id } = useParams<{ id: string }>();
-  const selectedMisi = misiOffers.find((offer: MisiCuanOffer) => offer.id === Number(id));
+  const { slug } = useParams<{ slug: string }>();
+  
+  // Try to find by slug first, then by ID for backwards compatibility
+  let selectedMisi = misiOffers.find((offer: MisiCuanOffer) => offer.slug === slug);
+  if (!selectedMisi && !isNaN(Number(slug))) {
+    selectedMisi = misiOffers.find((offer: MisiCuanOffer) => offer.id === Number(slug));
+  }
   
   if (!selectedMisi) return <div className="container mx-auto px-4 py-8"><h2>Misi tidak ditemukan</h2></div>;
   
@@ -293,8 +308,13 @@ const MisiStepsWrapper: React.FC<any> = ({ misiOffers }) => {
 };
 
 const MisiSubmissionWrapper: React.FC<any> = ({ misiOffers }) => {
-  const { id } = useParams<{ id: string }>();
-  const selectedMisi = misiOffers.find((offer: MisiCuanOffer) => offer.id === Number(id));
+  const { slug } = useParams<{ slug: string }>();
+  
+  // Try to find by slug first, then by ID for backwards compatibility
+  let selectedMisi = misiOffers.find((offer: MisiCuanOffer) => offer.slug === slug);
+  if (!selectedMisi && !isNaN(Number(slug))) {
+    selectedMisi = misiOffers.find((offer: MisiCuanOffer) => offer.id === Number(slug));
+  }
   
   if (!selectedMisi) return <div className="container mx-auto px-4 py-8"><h2>Misi tidak ditemukan</h2></div>;
   
@@ -323,8 +343,13 @@ const EventRecruitmentWrapper: React.FC<any> = ({ events, blogPosts, trendingCom
 };
 
 const EventDetailWrapper: React.FC<any> = ({ events, blogPosts, trendingCompanies, companies }) => {
-  const { id } = useParams<{ id: string }>();
-  const selectedEvent = events.find((event: RecruitmentEvent) => event.id === Number(id));
+  const { slug } = useParams<{ slug: string }>();
+  
+  // Try to find by slug first, then by ID for backwards compatibility
+  let selectedEvent = events.find((event: RecruitmentEvent) => event.slug === slug);
+  if (!selectedEvent && !isNaN(Number(slug))) {
+    selectedEvent = events.find((event: RecruitmentEvent) => event.id === Number(slug));
+  }
   
   if (!selectedEvent) return <div className="container mx-auto px-4 py-8"><h2>Event tidak ditemukan</h2></div>;
   
@@ -358,8 +383,13 @@ const PelatihanWrapper: React.FC<any> = ({ courses, blogPosts, events, trendingC
 };
 
 const PelatihanDetailWrapper: React.FC<any> = ({ courses, blogPosts, events, trendingCompanies }) => {
-  const { id } = useParams<{ id: string }>();
-  const selectedPelatihan = courses.find((course: PelatihanInfo) => course.id === Number(id));
+  const { slug } = useParams<{ slug: string }>();
+  
+  // Try to find by slug first, then by ID for backwards compatibility
+  let selectedPelatihan = courses.find((course: PelatihanInfo) => course.slug === slug);
+  if (!selectedPelatihan && !isNaN(Number(slug))) {
+    selectedPelatihan = courses.find((course: PelatihanInfo) => course.id === Number(slug));
+  }
   
   if (!selectedPelatihan) return <div className="container mx-auto px-4 py-8"><h2>Info Pelatihan tidak ditemukan</h2></div>;
   

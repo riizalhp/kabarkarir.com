@@ -4,6 +4,7 @@ import JobCard from './JobCard';
 import Sidebar from './Sidebar';
 import Pagination from './Pagination';
 import { viewTrackingService } from '../services/viewTracking';
+import { injectJSONLD, updateMetaTags, generateCompanySchema, generateBreadcrumbSchema } from '../utils/seo';
 
 interface CompanyDetailPageProps {
   companySlug?: string;
@@ -32,10 +33,30 @@ const CompanyDetailPage: React.FC<CompanyDetailPageProps> = ({ companySlug, comp
 
   const company = companyPreview || allCompanies.find(c => c.slug === companySlug);
 
-  // Track company view
+  // Track company view and inject SEO
   useEffect(() => {
     if (company && !isPreviewMode) {
       viewTrackingService.trackCompanyView(company.id);
+      
+      // Update page meta tags
+      updateMetaTags({
+        title: `${company.name} - Profil Perusahaan & Lowongan Kerja | KabarKarir.com`,
+        description: company.description?.substring(0, 155) || `Lihat profil lengkap ${company.name} dan lowongan kerja terbaru. Temukan informasi perusahaan, benefit, dan cara melamar kerja di ${company.name}.`,
+        keywords: `${company.name}, lowongan kerja ${company.name}, profil perusahaan, karir ${company.name}`,
+        canonical: `https://www.kabarkarir.com/perusahaan/${company.slug}`,
+        ogImage: company.logo || 'https://www.kabarkarir.com/og-image.jpg',
+        ogType: 'profile'
+      });
+
+      // Inject Company structured data
+      injectJSONLD(generateCompanySchema(company));
+
+      // Inject Breadcrumb structured data
+      injectJSONLD(generateBreadcrumbSchema([
+        { name: 'Beranda', url: 'https://www.kabarkarir.com/' },
+        { name: 'Perusahaan', url: 'https://www.kabarkarir.com/perusahaan' },
+        { name: company.name, url: window.location.href }
+      ]));
     }
   }, [company, isPreviewMode]);
 

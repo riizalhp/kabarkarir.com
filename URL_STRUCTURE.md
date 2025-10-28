@@ -21,24 +21,24 @@ Aplikasi telah diubah dari SPA (Single Page Application) menjadi MPA (Multi-Page
 ### Blog
 
 - `/blog` - Halaman blog
-- `/blog/:id` - Detail artikel (contoh: /blog/1)
+- `/blog/:slug` - Detail artikel (contoh: /blog/cara-mendaftar-magang atau /blog/1 untuk backwards compatibility)
 
 ### Misi Cuan
 
 - `/misi-cuan` - Daftar semua misi
-- `/misi-cuan/:id` - Detail misi (contoh: /misi-cuan/1)
-- `/misi-cuan/:id/tahapan` - Tahapan misi
-- `/misi-cuan/:id/submit` - Submit bukti misi
+- `/misi-cuan/:slug` - Detail misi (contoh: /misi-cuan/misi-cuan-bni-46 atau /misi-cuan/1)
+- `/misi-cuan/:slug/tahapan` - Tahapan misi
+- `/misi-cuan/:slug/submit` - Submit bukti misi
 
 ### Event Rekrutmen
 
 - `/event` - Daftar event
-- `/event/:id` - Detail event (contoh: /event/1)
+- `/event/:slug` - Detail event (contoh: /event/job-fair-jakarta-2024 atau /event/1)
 
 ### Pelatihan
 
 - `/pelatihan` - Daftar info pelatihan
-- `/pelatihan/:id` - Detail pelatihan (contoh: /pelatihan/1)
+- `/pelatihan/:slug` - Detail pelatihan (contoh: /pelatihan/workshop-digital-marketing atau /pelatihan/1)
 
 ### Layanan
 

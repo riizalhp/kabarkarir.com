@@ -1,8 +1,9 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { PelatihanInfo, Company, RecruitmentEvent, BlogPost } from '../types';
 import Sidebar from './Sidebar';
 import { toast } from '../utils/toast';
 import { isPelatihanFavorite, addFavoritePelatihan, removeFavoritePelatihan } from '../utils/favorites';
+import { injectJSONLD, updateMetaTags, generateEventSchema, generateBreadcrumbSchema, generateSlug } from '../utils/seo';
 
 
 interface PelatihanDetailPageProps {
@@ -19,6 +20,44 @@ interface PelatihanDetailPageProps {
 const PelatihanDetailPage: React.FC<PelatihanDetailPageProps> = ({ pelatihan, onNavigateToBlog, onNavigateToEventRecruitment, onSelectEvent, isPreviewMode = false, trendingCompanies, latestArticles, allEvents }) => {
   const [activeTab, setActiveTab] = useState('Deskripsi Pelatihan');
   const [isFavorite, setIsFavorite] = useState(isPelatihanFavorite(pelatihan.id));
+
+  // Inject SEO
+  useEffect(() => {
+    if (pelatihan && !isPreviewMode) {
+      // Update page meta tags
+      updateMetaTags({
+        title: `${pelatihan.title} - Pelatihan ${pelatihan.category} | KabarKarir.com`,
+        description: pelatihan.description?.substring(0, 155) || `Info pelatihan ${pelatihan.title} oleh ${pelatihan.organizer}. ${pelatihan.date} di ${pelatihan.location}.`,
+        keywords: `pelatihan, ${pelatihan.category}, ${pelatihan.title}, ${pelatihan.organizer}, training, workshop`,
+        canonical: `https://www.kabarkarir.com/pelatihan/${pelatihan.slug || pelatihan.id}`,
+        ogImage: pelatihan.image || 'https://www.kabarkarir.com/og-image.jpg',
+        ogType: 'article'
+      });
+
+      // Inject Event schema (pelatihan is also an event)
+      injectJSONLD(generateEventSchema({
+        id: pelatihan.id,
+        title: pelatihan.title,
+        description: pelatihan.description,
+        organizer: pelatihan.organizer,
+        date: pelatihan.date,
+        location: pelatihan.location,
+        image: pelatihan.image,
+        time: '08:00 - 17:00',
+        province: '',
+        city: pelatihan.location,
+        type: pelatihan.category,
+        isFeatured: false
+      }));
+
+      // Inject Breadcrumb structured data
+      injectJSONLD(generateBreadcrumbSchema([
+        { name: 'Beranda', url: 'https://www.kabarkarir.com/' },
+        { name: 'Pelatihan', url: 'https://www.kabarkarir.com/pelatihan' },
+        { name: pelatihan.title, url: window.location.href }
+      ]));
+    }
+  }, [pelatihan, isPreviewMode]);
 
   const getEmbeddableGoogleDriveUrl = (url: string): string => {
     if (!url) return '';

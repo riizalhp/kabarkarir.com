@@ -1,9 +1,10 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Job, Company, RecruitmentEvent, BlogPost } from '../types';
 import Sidebar from './Sidebar';
 import { toast } from '../utils/toast';
 import { isJobFavorite, addFavoriteJob, removeFavoriteJob } from '../utils/favorites';
 import JobCard from './JobCard';
+import { injectJSONLD, updateMetaTags, generateJobPostingSchema, generateBreadcrumbSchema, generateSlug } from '../utils/seo';
 
 interface JobDetailPageProps {
   job: Job;
@@ -21,6 +22,32 @@ interface JobDetailPageProps {
 const JobDetailPage: React.FC<JobDetailPageProps> = ({ job, allJobs, onBack, onSelectJob, onSelectCategory, onNavigateToBlog, onNavigateToEventRecruitment, onSelectEvent, onSelectCompany, isPreviewMode = false }) => {
   const [activeTab, setActiveTab] = useState('Deskripsi');
   const [isFavorite, setIsFavorite] = useState(isJobFavorite(job.id));
+
+  // SEO: Update meta tags and inject JSON-LD
+  useEffect(() => {
+    if (!isPreviewMode) {
+      // Update page meta tags
+      updateMetaTags({
+        title: `${job.title} - ${job.company} | KabarKarir.com`,
+        description: `Lowongan ${job.title} di ${job.company}. ${job.description?.substring(0, 100) || 'Lihat detail lengkap'}... Lokasi: ${job.location}. ${job.type}`,
+        keywords: `${job.title}, lowongan ${job.category}, ${job.company}, ${job.location}, ${job.tags?.join(', ')}`,
+        canonical: `https://www.kabarkarir.com/lowongan/${job.id}/${generateSlug(job.title)}`,
+        ogImage: job.logo || 'https://www.kabarkarir.com/og-image.jpg',
+        ogType: 'article'
+      });
+
+      // Inject JobPosting structured data
+      injectJSONLD(generateJobPostingSchema(job));
+
+      // Inject Breadcrumb structured data
+      injectJSONLD(generateBreadcrumbSchema([
+        { name: 'Beranda', url: 'https://www.kabarkarir.com/' },
+        { name: 'Lowongan Kerja', url: 'https://www.kabarkarir.com/' },
+        { name: job.category, url: `https://www.kabarkarir.com/kategori/${job.category}` },
+        { name: job.title, url: window.location.href }
+      ]));
+    }
+  }, [job, isPreviewMode]);
 
   const getEmbeddableGoogleDriveUrl = (url: string): string => {
     // Mencari ID file dari URL Google Drive

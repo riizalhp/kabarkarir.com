@@ -65,6 +65,7 @@ export interface Article {
 
 export interface RecruitmentEvent {
   id: number;
+  slug?: string;
   title: string;
   organizer: string;
   organizerSlug?: string;
@@ -89,6 +90,7 @@ export interface RecruitmentEvent {
 
 export interface BlogPost {
   id: number;
+  slug?: string;
   image: string;
   category: string;
   categoryColor: 'blue' | 'green' | 'orange';
@@ -107,6 +109,7 @@ export interface SubmissionField {
 
 export interface MisiCuanOffer {
   id: number;
+  slug?: string;
   company: string;
   companySlug: string;
   logo: string;
@@ -125,6 +128,7 @@ export interface MisiCuanOffer {
 
 export interface PelatihanInfo {
   id: number;
+  slug?: string;
   image: string;
   category: string;
   title: string;
