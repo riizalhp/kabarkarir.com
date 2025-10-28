@@ -1,6 +1,7 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import { BlogPost, Company, RecruitmentEvent } from '../types';
 import Sidebar from './Sidebar';
+import { viewTrackingService } from '../services/viewTracking';
 
 interface ArticleDetailPageProps {
   post: BlogPost;
@@ -14,6 +15,13 @@ interface ArticleDetailPageProps {
 }
 
 const ArticleDetailPage: React.FC<ArticleDetailPageProps> = ({ post, onNavigateToBlog, onNavigateToEventRecruitment, onSelectEvent, isPreviewMode = false, trendingCompanies, latestArticles, allEvents }) => {
+  // Track blog post view
+  useEffect(() => {
+    if (post && !isPreviewMode) {
+      viewTrackingService.trackBlogPostView(post.id);
+    }
+  }, [post, isPreviewMode]);
+
   const badgeColorClasses = {
     blue: 'bg-blue-100 text-primary',
     green: 'bg-green-100 text-green-700',

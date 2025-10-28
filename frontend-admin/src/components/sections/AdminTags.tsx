@@ -3,6 +3,7 @@ import { Tag } from '../../types';
 import { toast } from '../../utils/toast';
 import { downloadExcelTemplate } from '../../utils/excel';
 import Pagination from '../Pagination';
+import { adminTagsService } from '../../services/adminApi';
 
 // Beri tahu TypeScript tentang objek XLSX global dari CDN
 declare const XLSX: any;
@@ -19,6 +20,25 @@ const AdminTags: React.FC<AdminTagsProps> = ({ tags, setTags }) => {
     const [currentTag, setCurrentTag] = useState<Partial<Tag> | null>(null);
     const [searchTerm, setSearchTerm] = useState('');
     const [currentPage, setCurrentPage] = useState(1);
+    const [loading, setLoading] = useState(false);
+    const [dataLoading, setDataLoading] = useState(true);
+    
+    useEffect(() => {
+        fetchTags();
+    }, []);
+
+    const fetchTags = async () => {
+        try {
+            setDataLoading(true);
+            const data = await adminTagsService.getAll();
+            setTags(data);
+        } catch (error) {
+            console.error('Error fetching tags:', error);
+            toast('Gagal memuat data tags');
+        } finally {
+            setDataLoading(false);
+        }
+    };
     
     useEffect(() => {
         setCurrentPage(1);
@@ -34,28 +54,48 @@ const AdminTags: React.FC<AdminTagsProps> = ({ tags, setTags }) => {
         setCurrentTag(null);
     };
 
-    const handleDelete = (tagId: number) => {
+    const handleDelete = async (tagId: number) => {
         if (window.confirm('Apakah Anda yakin ingin menghapus tag ini? Ini dapat mempengaruhi data lowongan yang ada.')) {
-            setTags(prevTags => prevTags.filter(t => t.id !== tagId));
+            try {
+                setLoading(true);
+                await adminTagsService.delete(tagId);
+                setTags(prevTags => prevTags.filter(t => t.id !== tagId));
+                toast('Tag berhasil dihapus');
+            } catch (error) {
+                console.error('Error deleting tag:', error);
+                toast('Gagal menghapus tag');
+            } finally {
+                setLoading(false);
+            }
         }
     };
 
-    const handleSave = (e: React.FormEvent) => {
+    const handleSave = async (e: React.FormEvent) => {
         e.preventDefault();
         if (!currentTag || !currentTag.name?.trim()) return;
 
-        if (currentTag.id) {
-            // Update
-            setTags(prevTags => prevTags.map(t => t.id === currentTag.id ? (currentTag as Tag) : t));
-        } else {
-            // Create
-            const newTag: Tag = {
-                id: Math.max(...tags.map(t => t.id), 0) + 1,
-                name: currentTag.name.trim(),
-            };
-            setTags(prevTags => [newTag, ...prevTags]);
+        try {
+            setLoading(true);
+            
+            if (currentTag.id) {
+                // Update
+                const updated = await adminTagsService.create({ name: currentTag.name.trim() });
+                setTags(prevTags => prevTags.map(t => t.id === currentTag.id ? updated : t));
+                toast('Tag berhasil diperbarui');
+            } else {
+                // Create
+                const newTag = await adminTagsService.create({ name: currentTag.name.trim() });
+                setTags(prevTags => [newTag, ...prevTags]);
+                toast('Tag berhasil ditambahkan');
+            }
+            
+            handleCloseModal();
+        } catch (error) {
+            console.error('Error saving tag:', error);
+            toast('Gagal menyimpan tag');
+        } finally {
+            setLoading(false);
         }
-        handleCloseModal();
     };
     
     const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -131,6 +171,17 @@ const AdminTags: React.FC<AdminTagsProps> = ({ tags, setTags }) => {
     const handlePageChange = (page: number) => {
         setCurrentPage(page);
     };
+
+    if (dataLoading) {
+        return (
+            <div className="bg-white p-6 rounded-lg shadow-md">
+                <div className="flex justify-center items-center py-12">
+                    <i className="fas fa-spinner fa-spin text-4xl text-primary"></i>
+                    <span className="ml-3 text-lg text-slate-600">Memuat data tags...</span>
+                </div>
+            </div>
+        );
+    }
 
     return (
         <div className="bg-white p-6 rounded-lg shadow-md">
@@ -208,8 +259,10 @@ const AdminTags: React.FC<AdminTagsProps> = ({ tags, setTags }) => {
                                 />
                             </div>
                             <div className="flex justify-end space-x-3 pt-4 border-t mt-6">
-                                <button type="button" onClick={handleCloseModal} className="bg-slate-200 text-slate-800 px-4 py-2 rounded-lg font-medium hover:bg-slate-300">Batal</button>
-                                <button type="submit" className="bg-primary text-white px-4 py-2 rounded-lg font-medium hover:bg-blue-700">Simpan</button>
+                                <button type="button" onClick={handleCloseModal} className="bg-slate-200 text-slate-800 px-4 py-2 rounded-lg font-medium hover:bg-slate-300" disabled={loading}>Batal</button>
+                                <button type="submit" className="bg-primary text-white px-4 py-2 rounded-lg font-medium hover:bg-blue-700 disabled:opacity-50" disabled={loading}>
+                                    {loading ? <><i className="fas fa-spinner fa-spin mr-2"></i>Menyimpan...</> : 'Simpan'}
+                                </button>
                             </div>
                         </form>
                     </div>

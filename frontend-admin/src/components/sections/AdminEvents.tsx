@@ -3,6 +3,7 @@ import { RecruitmentEvent, CompanyProfile } from '../../types';
 import { toast } from '../../utils/toast';
 import { downloadExcelTemplate } from '../../utils/excel';
 import Pagination from '../Pagination';
+import { adminEventsService, activityLogsService } from '../../services/adminApi';
 
 // Beri tahu TypeScript tentang objek XLSX global dari CDN
 declare const XLSX: any;
@@ -35,6 +36,25 @@ const AdminEvents: React.FC<AdminEventsProps> = ({ events, setEvents, allCompani
     const companySearchInputRef = useRef<HTMLInputElement>(null);
     const [currentPage, setCurrentPage] = useState(1);
     const [searchTerm, setSearchTerm] = useState('');
+    const [loading, setLoading] = useState(false);
+    const [dataLoading, setDataLoading] = useState(true);
+
+    useEffect(() => {
+        fetchEvents();
+    }, []);
+
+    const fetchEvents = async () => {
+        try {
+            setDataLoading(true);
+            const data = await adminEventsService.getAll();
+            setEvents(data);
+        } catch (error) {
+            console.error('Error fetching events:', error);
+            toast('Gagal memuat data event');
+        } finally {
+            setDataLoading(false);
+        }
+    };
 
     useEffect(() => {
         setCurrentPage(1);
@@ -72,38 +92,100 @@ const AdminEvents: React.FC<AdminEventsProps> = ({ events, setEvents, allCompani
         setCurrentEvent(null);
     };
 
-    const handleDelete = (eventId: number) => {
+    const handleDelete = async (eventId: number) => {
         if (window.confirm('Apakah Anda yakin ingin menghapus event ini?')) {
-            setEvents(prevEvents => prevEvents.filter(e => e.id !== eventId));
+            try {
+                setLoading(true);
+                const eventToDelete = events.find(e => e.id === eventId);
+                
+                await adminEventsService.delete(eventId);
+                setEvents(prevEvents => prevEvents.filter(e => e.id !== eventId));
+                
+                if (eventToDelete) {
+                    await activityLogsService.create({
+                        type: 'DELETE',
+                        category: 'Event',
+                        text: `Event "${eventToDelete.title}" dihapus.`,
+                    });
+                }
+                
+                toast('Event berhasil dihapus');
+            } catch (error) {
+                console.error('Error deleting event:', error);
+                toast('Gagal menghapus event');
+            } finally {
+                setLoading(false);
+            }
         }
     };
     
-    const handleSave = (e: React.FormEvent) => {
+    const handleSave = async (e: React.FormEvent) => {
         e.preventDefault();
         if (!currentEvent) return;
         
-        const finalEventData = {
-            ...currentEvent,
-            availablePositions: Array.isArray(currentEvent.availablePositions) ? currentEvent.availablePositions : [],
-            whatToBring: Array.isArray(currentEvent.whatToBring) ? currentEvent.whatToBring : [],
-            participatingCompanies: Array.isArray(currentEvent.participatingCompanies) ? currentEvent.participatingCompanies : [],
-        };
+        try {
+            setLoading(true);
+            
+            const finalEventData = {
+                ...currentEvent,
+                availablePositions: Array.isArray(currentEvent.availablePositions) ? currentEvent.availablePositions : [],
+                whatToBring: Array.isArray(currentEvent.whatToBring) ? currentEvent.whatToBring : [],
+                participatingCompanies: Array.isArray(currentEvent.participatingCompanies) ? currentEvent.participatingCompanies : [],
+            };
 
-        if (finalEventData.id) {
-            // Update
-            setEvents(prevEvents => prevEvents.map(event => event.id === finalEventData.id ? (finalEventData as RecruitmentEvent) : event));
-        } else {
-            // Create
-            const newEvent: RecruitmentEvent = {
-                id: Math.max(...events.map(e => e.id), 0) + 1,
-                isFeatured: false,
-                province: '',
-                city: '',
-                ...finalEventData
-            } as RecruitmentEvent;
-            setEvents(prevEvents => [newEvent, ...prevEvents]);
+            if (finalEventData.id) {
+                // Update
+                const updated = await adminEventsService.update(finalEventData.id, finalEventData);
+                setEvents(prevEvents => prevEvents.map(event => event.id === finalEventData.id ? updated : event));
+                
+                await activityLogsService.create({
+                    type: 'UPDATE',
+                    category: 'Event',
+                    text: `Event "${finalEventData.title}" diperbarui.`,
+                });
+                
+                toast('Event berhasil diperbarui');
+            } else {
+                // Create
+                const newEvent = await adminEventsService.create({
+                    title: finalEventData.title || '',
+                    organizer: finalEventData.organizer || '',
+                    date: finalEventData.date || '',
+                    time: finalEventData.time || '',
+                    location: finalEventData.location || '',
+                    type: finalEventData.type || 'Job Fair',
+                    description: finalEventData.description || '',
+                    image: finalEventData.image || '',
+                    availablePositions: finalEventData.availablePositions,
+                    whatToBring: finalEventData.whatToBring,
+                    participatingCompanies: finalEventData.participatingCompanies,
+                    isFeatured: false,
+                    province: finalEventData.province || '',
+                    city: finalEventData.city || '',
+                    mapEmbedUrl: finalEventData.mapEmbedUrl || '',
+                    mapDirectionUrl: finalEventData.mapDirectionUrl || '',
+                    pdfEmbedUrl: finalEventData.pdfEmbedUrl || '',
+                    videoEmbedUrl: finalEventData.videoEmbedUrl || '',
+                });
+                
+                setEvents(prevEvents => [newEvent, ...prevEvents]);
+                
+                await activityLogsService.create({
+                    type: 'CREATE',
+                    category: 'Event',
+                    text: `Event baru ditambahkan: "${newEvent.title}".`,
+                });
+                
+                toast('Event berhasil ditambahkan');
+            }
+            
+            handleCloseModal();
+        } catch (error) {
+            console.error('Error saving event:', error);
+            toast('Gagal menyimpan event');
+        } finally {
+            setLoading(false);
         }
-        handleCloseModal();
     };
 
      const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) => {
@@ -272,6 +354,17 @@ const AdminEvents: React.FC<AdminEventsProps> = ({ events, setEvents, allCompani
     const handlePageChange = (page: number) => {
         setCurrentPage(page);
     };
+
+    if (dataLoading) {
+        return (
+            <div className="bg-white p-6 rounded-lg shadow-md">
+                <div className="flex justify-center items-center py-12">
+                    <i className="fas fa-spinner fa-spin text-4xl text-primary"></i>
+                    <span className="ml-3 text-lg text-slate-600">Memuat data event...</span>
+                </div>
+            </div>
+        );
+    }
 
     return (
         <div className="bg-white p-6 rounded-lg shadow-md">
@@ -474,11 +567,13 @@ const AdminEvents: React.FC<AdminEventsProps> = ({ events, setEvents, allCompani
                             </div>
                          </form>
                          <div className="flex justify-end space-x-3 pt-4 border-t mt-6 shrink-0">
-                            <button type="button" onClick={handleCloseModal} className="bg-slate-200 text-slate-800 px-4 py-2 rounded-lg font-medium hover:bg-slate-300">Batal</button>
-                             <button type="button" onClick={() => onShowPreview('event', currentEvent)} className="bg-slate-500 text-white px-4 py-2 rounded-lg font-medium hover:bg-slate-600">
+                            <button type="button" onClick={handleCloseModal} className="bg-slate-200 text-slate-800 px-4 py-2 rounded-lg font-medium hover:bg-slate-300" disabled={loading}>Batal</button>
+                             <button type="button" onClick={() => onShowPreview('event', currentEvent)} className="bg-slate-500 text-white px-4 py-2 rounded-lg font-medium hover:bg-slate-600" disabled={loading}>
                                 <i className="fas fa-eye mr-2"></i>Preview
                             </button>
-                            <button type="submit" form="event-form" onClick={handleSave} className="bg-primary text-white px-4 py-2 rounded-lg font-medium hover:bg-blue-700">Simpan</button>
+                            <button type="submit" form="event-form" onClick={handleSave} className="bg-primary text-white px-4 py-2 rounded-lg font-medium hover:bg-blue-700 disabled:opacity-50" disabled={loading}>
+                                {loading ? <><i className="fas fa-spinner fa-spin mr-2"></i>Menyimpan...</> : 'Simpan'}
+                            </button>
                         </div>
                     </div>
                 </div>

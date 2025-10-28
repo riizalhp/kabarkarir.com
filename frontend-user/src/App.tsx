@@ -1,11 +1,12 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import { useLocation } from 'react-router-dom';
 import Header from './components/Header';
 import Footer from './components/Footer';
 import ToastContainer from './components/ToastContainer';
 import AppRoutes from './AppRoutes';
-import { INITIAL_JOBS, INITIAL_BLOG_POSTS, INITIAL_MISI_CUAN_OFFERS, INITIAL_COMPANY_PROFILES, INITIAL_RECRUITMENT_EVENTS, INITIAL_PELATIHAN_INFO, INITIAL_MAJORS, CATEGORIES, INITIAL_TAGS } from './constants';
+import { CATEGORIES } from './constants';
 import { Job, BlogPost, MisiCuanOffer, CompanyProfile, RecruitmentEvent, PelatihanInfo, Major, Tag, Category } from './types';
+import { jobsService, companiesService, blogService, eventsService, misiService, pelatihanService, majorsService, tagsService } from './services/api';
 
 // Breadcrumb Component Definition
 export interface BreadcrumbItem {
@@ -47,14 +48,61 @@ const App: React.FC = () => {
   const location = useLocation();
   
   // --- STATE MANAGEMENT ---
-  const [jobs] = useState<Job[]>(INITIAL_JOBS);
-  const [blogPosts] = useState<BlogPost[]>(INITIAL_BLOG_POSTS);
-  const [misiOffers] = useState<MisiCuanOffer[]>(INITIAL_MISI_CUAN_OFFERS);
-  const [companies] = useState<CompanyProfile[]>(INITIAL_COMPANY_PROFILES);
-  const [events] = useState<RecruitmentEvent[]>(INITIAL_RECRUITMENT_EVENTS);
-  const [courses] = useState<PelatihanInfo[]>(INITIAL_PELATIHAN_INFO);
-  const [majors] = useState<Major[]>(INITIAL_MAJORS);
-  const [tags] = useState<Tag[]>(INITIAL_TAGS);
+  const [jobs, setJobs] = useState<Job[]>([]);
+  const [blogPosts, setBlogPosts] = useState<BlogPost[]>([]);
+  const [misiOffers, setMisiOffers] = useState<MisiCuanOffer[]>([]);
+  const [companies, setCompanies] = useState<CompanyProfile[]>([]);
+  const [events, setEvents] = useState<RecruitmentEvent[]>([]);
+  const [courses, setCourses] = useState<PelatihanInfo[]>([]);
+  const [majors, setMajors] = useState<Major[]>([]);
+  const [tags, setTags] = useState<Tag[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [categories] = useState<Category[]>(CATEGORIES);
+
+  // --- FETCH DATA FROM SUPABASE ON MOUNT ---
+  useEffect(() => {
+    const fetchAllData = async () => {
+      try {
+        setLoading(true);
+        
+        // Fetch all data in parallel
+        const [
+          jobsData,
+          companiesData,
+          blogData,
+          eventsData,
+          misiData,
+          pelatihanData,
+          majorsData,
+          tagsData,
+        ] = await Promise.all([
+          jobsService.getAll(),
+          companiesService.getAll(),
+          blogService.getAll(),
+          eventsService.getAll(),
+          misiService.getAll(),
+          pelatihanService.getAll(),
+          majorsService.getAll(),
+          tagsService.getAll(),
+        ]);
+
+        setJobs(jobsData);
+        setCompanies(companiesData);
+        setBlogPosts(blogData);
+        setEvents(eventsData);
+        setMisiOffers(misiData);
+        setCourses(pelatihanData);
+        setMajors(majorsData);
+        setTags(tagsData);
+      } catch (error) {
+        console.error('Error fetching data:', error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchAllData();
+  }, []);
 
   // --- DERIVED STATE ---
   const companiesWithJobCount = useMemo(() => {
@@ -70,8 +118,13 @@ const App: React.FC = () => {
   }, [jobs, companies]);
 
   const trendingCompanies = useMemo(() => {
+    // Sort by view_count first, then by jobsAvailable as fallback
     return [...companiesWithJobCount]
-      .sort((a, b) => b.jobsAvailable - a.jobsAvailable)
+      .sort((a, b) => {
+        const viewDiff = (b.view_count || 0) - (a.view_count || 0);
+        if (viewDiff !== 0) return viewDiff;
+        return b.jobsAvailable - a.jobsAvailable;
+      })
       .slice(0, 4);
   }, [companiesWithJobCount]);
   
@@ -280,6 +333,18 @@ const App: React.FC = () => {
   };
 
   const breadcrumbs = generateBreadcrumbs();
+
+  // Show loading state while fetching data
+  if (loading) {
+    return (
+      <div className="bg-gray-50 font-poppins min-h-screen flex items-center justify-center">
+        <div className="text-center">
+          <div className="inline-block animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mb-4"></div>
+          <p className="text-gray-600">Memuat data...</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="bg-gray-50 font-poppins">

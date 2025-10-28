@@ -18,9 +18,17 @@ const TrendingCompanies: React.FC<TrendingCompaniesProps> = ({ companies }) => (
           <div className="bg-gray-100 rounded w-10 h-10 flex items-center justify-center shrink-0">
             <img src={company.logo} alt={company.name} className="w-8 h-8 object-contain" />
           </div>
-          <div className="ml-3">
+          <div className="ml-3 flex-1">
             <h4 className="font-medium text-secondary hover:text-primary text-sm transition-colors">{company.name}</h4>
-            <p className="text-xs text-gray-500">{company.jobsAvailable} lowongan tersedia</p>
+            <div className="flex items-center gap-3 text-xs text-gray-500">
+              <span>{company.jobsAvailable} lowongan</span>
+              {(company as any).view_count && (
+                <span className="flex items-center gap-1">
+                  <i className="fas fa-eye text-primary"></i>
+                  {(company as any).view_count} views
+                </span>
+              )}
+            </div>
           </div>
         </a>
       ))}
@@ -48,7 +56,15 @@ const LatestArticlesWidget: React.FC<Pick<SidebarProps, 'onNavigateToBlog' | 'la
         {latestArticles.map(article => (
           <a href="#" key={article.id} className="block hover:bg-gray-50 p-2 rounded transition">
             <h4 className="font-medium text-secondary hover:text-primary text-sm transition-colors">{article.title}</h4>
-            <p className="text-xs text-gray-500 mt-1">{article.posted}</p>
+            <div className="flex items-center gap-3 text-xs text-gray-500 mt-1">
+              <span>{article.posted}</span>
+              {article.view_count && (
+                <span className="flex items-center gap-1">
+                  <i className="fas fa-eye text-primary"></i>
+                  {article.view_count} views
+                </span>
+              )}
+            </div>
           </a>
         ))}
       </div>
@@ -81,6 +97,12 @@ const RecruitmentEvents: React.FC<Pick<SidebarProps, 'onNavigateToEventRecruitme
                         <i className="fas fa-map-marker-alt mr-2"></i> 
                         <span>{event.location}</span>
                     </div>
+                    {event.view_count && (
+                        <div className="flex items-center text-xs text-gray-500 mt-1">
+                            <i className="fas fa-eye text-primary mr-2"></i>
+                            <span>{event.view_count} views</span>
+                        </div>
+                    )}
                     <div className="mt-3">
                         <a href="#" onClick={(e) => { e.preventDefault(); onSelectEvent(event.id); }} className="text-secondary text-xs font-medium hover:text-primary">
                             Lihat Detail

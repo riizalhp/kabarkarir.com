@@ -88,6 +88,7 @@ const AppRoutes: React.FC<AppRoutesProps> = ({
           isLoggedIn ? 
           <AdminPage 
             onNavigateHome={() => window.location.href = 'https://kabarkarir.com'}
+            onLogout={onLogout}
             jobs={jobs} 
             setJobs={setJobs}
             companies={companies} 

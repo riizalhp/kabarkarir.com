@@ -3,6 +3,7 @@ import { Job, CompanyProfile, Major, Tag, Activity } from '../../types';
 import { toast } from '../../utils/toast';
 import { downloadExcelTemplate } from '../../utils/excel';
 import Pagination from '../Pagination';
+import { adminJobsService, activityLogsService } from '../../services/adminApi';
 
 // Beri tahu TypeScript tentang objek XLSX global dari CDN
 declare const XLSX: any;
@@ -25,6 +26,26 @@ const AdminJobs: React.FC<AdminJobsProps> = ({ jobs, setJobs, allCompanies, allM
     const [companySearch, setCompanySearch] = useState('');
     const [currentPage, setCurrentPage] = useState(1);
     const [searchTerm, setSearchTerm] = useState('');
+    const [loading, setLoading] = useState(false);
+    const [dataLoading, setDataLoading] = useState(true);
+
+    // Fetch jobs from Supabase on mount
+    useEffect(() => {
+        fetchJobs();
+    }, []);
+
+    const fetchJobs = async () => {
+        try {
+            setDataLoading(true);
+            const data = await adminJobsService.getAll();
+            setJobs(data);
+        } catch (error) {
+            console.error('Error fetching jobs:', error);
+            toast('Gagal memuat data lowongan');
+        } finally {
+            setDataLoading(false);
+        }
+    };
 
     useEffect(() => {
         setCurrentPage(1);
@@ -68,56 +89,109 @@ const AdminJobs: React.FC<AdminJobsProps> = ({ jobs, setJobs, allCompanies, allM
         setCurrentJob(null);
     };
 
-    const handleDelete = (jobId: number) => {
+    const handleDelete = async (jobId: number) => {
         if (window.confirm('Apakah Anda yakin ingin menghapus lowongan ini?')) {
-            const jobToDelete = jobs.find(job => job.id === jobId);
-            if (jobToDelete) {
+            try {
+                setLoading(true);
+                const jobToDelete = jobs.find(job => job.id === jobId);
+                
+                await adminJobsService.delete(jobId);
+                
                 setJobs(prevJobs => prevJobs.filter(job => job.id !== jobId));
-                addActivity({
-                    type: 'DELETE',
-                    category: 'Lowongan',
-                    text: `Lowongan "${jobToDelete.title}" dihapus.`
-                });
+                
+                if (jobToDelete) {
+                    // Log activity to Supabase
+                    await activityLogsService.create({
+                        type: 'DELETE',
+                        category: 'Lowongan',
+                        text: `Lowongan "${jobToDelete.title}" dihapus.`,
+                    });
+                    
+                    addActivity({
+                        type: 'DELETE',
+                        category: 'Lowongan',
+                        text: `Lowongan "${jobToDelete.title}" dihapus.`
+                    });
+                }
+                
+                toast('Lowongan berhasil dihapus');
+            } catch (error) {
+                console.error('Error deleting job:', error);
+                toast('Gagal menghapus lowongan');
+            } finally {
+                setLoading(false);
             }
         }
     };
     
-    const handleSave = (e: React.FormEvent) => {
+    const handleSave = async (e: React.FormEvent) => {
         e.preventDefault();
         if (!currentJob) return;
 
-        const finalJobData = {
-            ...currentJob,
-            qualifications: currentJob.qualifications?.filter(q => q.trim() !== '') || [],
-            benefits: currentJob.benefits?.filter(b => b.trim() !== '') || [],
-            tags: currentJob.tags || [],
-        };
+        try {
+            setLoading(true);
+            
+            const finalJobData = {
+                ...currentJob,
+                qualifications: currentJob.qualifications?.filter(q => q.trim() !== '') || [],
+                benefits: currentJob.benefits?.filter(b => b.trim() !== '') || [],
+                tags: currentJob.tags || [],
+                majors: currentJob.majors || [],
+            };
 
-        if (finalJobData.id) {
-            // Update
-            setJobs(prevJobs => prevJobs.map(job => job.id === finalJobData.id ? (finalJobData as Job) : job));
-            addActivity({
-              type: 'UPDATE',
-              category: 'Lowongan',
-              text: `Lowongan "${finalJobData.title}" di ${finalJobData.company} diperbarui.`
-          });
-        } else {
-            // Create
-            const newJob: Job = {
-                id: Math.max(...jobs.map(j => j.id), 0) + 1,
-                posted: 'Baru saja',
-                province: '',
-                city: '',
-                ...finalJobData,
-            } as Job;
-            setJobs(prevJobs => [newJob, ...prevJobs]);
-            addActivity({
-                type: 'CREATE',
-                category: 'Lowongan',
-                text: `Lowongan baru ditambahkan: "${newJob.title}" oleh ${newJob.company}.`
-            });
+            if (finalJobData.id) {
+                // Update existing job
+                const updatedJob = await adminJobsService.update(finalJobData.id, finalJobData);
+                setJobs(prevJobs => prevJobs.map(job => job.id === finalJobData.id ? updatedJob : job));
+                
+                // Log activity
+                await activityLogsService.create({
+                    type: 'UPDATE',
+                    category: 'Lowongan',
+                    text: `Lowongan "${finalJobData.title}" di ${finalJobData.company} diperbarui.`,
+                });
+                
+                addActivity({
+                    type: 'UPDATE',
+                    category: 'Lowongan',
+                    text: `Lowongan "${finalJobData.title}" di ${finalJobData.company} diperbarui.`
+                });
+                
+                toast('Lowongan berhasil diperbarui');
+            } else {
+                // Create new job
+                const newJob = await adminJobsService.create({
+                    ...finalJobData,
+                    posted: new Date().toISOString(),
+                    province: finalJobData.province || '',
+                    city: finalJobData.city || '',
+                } as Omit<Job, 'id'>);
+                
+                setJobs(prevJobs => [newJob, ...prevJobs]);
+                
+                // Log activity
+                await activityLogsService.create({
+                    type: 'CREATE',
+                    category: 'Lowongan',
+                    text: `Lowongan baru ditambahkan: "${newJob.title}" oleh ${newJob.company}.`,
+                });
+                
+                addActivity({
+                    type: 'CREATE',
+                    category: 'Lowongan',
+                    text: `Lowongan baru ditambahkan: "${newJob.title}" oleh ${newJob.company}.`
+                });
+                
+                toast('Lowongan berhasil ditambahkan');
+            }
+            
+            handleCloseModal();
+        } catch (error) {
+            console.error('Error saving job:', error);
+            toast('Gagal menyimpan lowongan');
+        } finally {
+            setLoading(false);
         }
-        handleCloseModal();
     };
 
     const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) => {
@@ -296,6 +370,17 @@ const AdminJobs: React.FC<AdminJobsProps> = ({ jobs, setJobs, allCompanies, allM
     const handlePageChange = (page: number) => {
         setCurrentPage(page);
     };
+    
+    if (dataLoading) {
+        return (
+            <div className="bg-white p-6 rounded-lg shadow-md">
+                <div className="flex justify-center items-center py-12">
+                    <i className="fas fa-spinner fa-spin text-4xl text-primary"></i>
+                    <span className="ml-3 text-lg text-slate-600">Memuat data lowongan...</span>
+                </div>
+            </div>
+        );
+    }
     
     return (
         <div className="bg-white p-6 rounded-lg shadow-md">
@@ -514,11 +599,19 @@ const AdminJobs: React.FC<AdminJobsProps> = ({ jobs, setJobs, allCompanies, allM
                                 </div>
                             </div>
                             <div className="flex justify-end space-x-3 pt-4 border-t mt-6">
-                                <button type="button" onClick={handleCloseModal} className="bg-slate-200 text-slate-800 px-4 py-2 rounded-lg font-medium hover:bg-slate-300">Batal</button>
-                                <button type="button" onClick={() => onShowPreview('job', currentJob)} className="bg-slate-500 text-white px-4 py-2 rounded-lg font-medium hover:bg-slate-600">
+                                <button type="button" onClick={handleCloseModal} className="bg-slate-200 text-slate-800 px-4 py-2 rounded-lg font-medium hover:bg-slate-300" disabled={loading}>Batal</button>
+                                <button type="button" onClick={() => onShowPreview('job', currentJob)} className="bg-slate-500 text-white px-4 py-2 rounded-lg font-medium hover:bg-slate-600" disabled={loading}>
                                     <i className="fas fa-eye mr-2"></i>Preview
                                 </button>
-                                <button type="submit" className="bg-primary text-white px-4 py-2 rounded-lg font-medium hover:bg-blue-700">Simpan</button>
+                                <button type="submit" className="bg-primary text-white px-4 py-2 rounded-lg font-medium hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed" disabled={loading}>
+                                    {loading ? (
+                                        <>
+                                            <i className="fas fa-spinner fa-spin mr-2"></i>Menyimpan...
+                                        </>
+                                    ) : (
+                                        'Simpan'
+                                    )}
+                                </button>
                             </div>
                         </form>
                     </div>

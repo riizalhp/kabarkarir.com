@@ -3,6 +3,8 @@ import { MisiCuanOffer, SubmissionField, MisiSubmission } from '../../types';
 import { downloadExcelTemplate } from '../../utils/excel';
 import { formatDisplayDate } from '../../utils/formatting';
 import Pagination from '../Pagination';
+import { adminMisiService, activityLogsService } from '../../services/adminApi';
+import { toast } from '../../utils/toast';
 
 interface AdminMisiProps {
     misi: MisiCuanOffer[];
@@ -16,6 +18,10 @@ const MISI_ITEMS_PER_PAGE = 10;
 const SUBMISSION_ITEMS_PER_PAGE = 10;
 
 const AdminMisi: React.FC<AdminMisiProps> = ({ misi, setMisi, submissions, setSubmissions, onShowPreview }) => {
+    // Loading states
+    const [loading, setLoading] = useState(false);
+    const [dataLoading, setDataLoading] = useState(true);
+
     // State for Mission Add/Edit Modal
     const [isMisiModalOpen, setIsMisiModalOpen] = useState(false);
     const [currentMisi, setCurrentMisi] = useState<Omit<Partial<MisiCuanOffer>, 'steps'> & { steps?: string } | null>(null);
@@ -34,6 +40,35 @@ const AdminMisi: React.FC<AdminMisiProps> = ({ misi, setMisi, submissions, setSu
     // Pagination States
     const [misiPage, setMisiPage] = useState(1);
     const [submissionPage, setSubmissionPage] = useState(1);
+
+    // Fetch misi and submissions from Supabase
+    useEffect(() => {
+        fetchMisi();
+        fetchSubmissions();
+    }, []);
+
+    const fetchMisi = async () => {
+        try {
+            setDataLoading(true);
+            const data = await adminMisiService.getAll();
+            setMisi(data);
+        } catch (error) {
+            console.error('Error fetching misi:', error);
+            toast('Gagal memuat data misi');
+        } finally {
+            setDataLoading(false);
+        }
+    };
+
+    const fetchSubmissions = async () => {
+        try {
+            const data = await adminMisiService.getSubmissions();
+            setSubmissions(data);
+        } catch (error) {
+            console.error('Error fetching submissions:', error);
+            toast('Gagal memuat data pengumpulan');
+        }
+    };
 
     useEffect(() => {
         setMisiPage(1);
@@ -76,32 +111,81 @@ const AdminMisi: React.FC<AdminMisiProps> = ({ misi, setMisi, submissions, setSu
         setCurrentMisi(null);
     };
 
-    const handleDeleteMisi = (misiId: number) => {
-        if (window.confirm('Apakah Anda yakin ingin menghapus misi ini?')) {
+    const handleDeleteMisi = async (misiId: number) => {
+        if (!window.confirm('Apakah Anda yakin ingin menghapus misi ini?')) return;
+
+        try {
+            setLoading(true);
+            await adminMisiService.delete(misiId);
             setMisi(prevMisi => prevMisi.filter(m => m.id !== misiId));
+            toast('Misi berhasil dihapus');
+        } catch (error) {
+            console.error('Error deleting misi:', error);
+            toast('Gagal menghapus misi');
+        } finally {
+            setLoading(false);
         }
     };
     
-    const handleSaveMisi = (e: React.FormEvent) => {
+    const handleSaveMisi = async (e: React.FormEvent) => {
         e.preventDefault();
         if (!currentMisi) return;
 
-        const finalMisiData = {
-            ...currentMisi,
-            steps: currentMisi.steps ? currentMisi.steps.split('\n').filter(s => s.trim() !== '') : [],
-        };
-
-        if (finalMisiData.id) {
-            setMisi(prevMisi => prevMisi.map(m => m.id === finalMisiData.id ? (finalMisiData as MisiCuanOffer) : m));
-        } else {
-            const newMisi: MisiCuanOffer = {
-                id: Math.max(...misi.map(m => m.id), 0) + 1,
-                ...finalMisiData
-            } as MisiCuanOffer;
-             if (!newMisi.logo) newMisi.logo = 'https://picsum.photos/80/80?random=' + Math.floor(Math.random() * 100);
-            setMisi(prevMisi => [newMisi, ...prevMisi]);
+        // Validation
+        if (!currentMisi.title || !currentMisi.company || !currentMisi.reward || !currentMisi.expiryDate) {
+            toast('Harap lengkapi semua field yang wajib');
+            return;
         }
-        handleCloseMisiModal();
+
+        try {
+            setLoading(true);
+
+            const finalMisiData = {
+                ...currentMisi,
+                steps: currentMisi.steps ? currentMisi.steps.split('\n').filter(s => s.trim() !== '') : [],
+            };
+
+            let savedMisi: MisiCuanOffer;
+
+            if (finalMisiData.id) {
+                // Update existing
+                savedMisi = await adminMisiService.update(finalMisiData.id, finalMisiData as Partial<MisiCuanOffer>);
+                setMisi(prevMisi => prevMisi.map(m => m.id === savedMisi.id ? savedMisi : m));
+                
+                // Log activity
+                await activityLogsService.create({
+                    type: 'UPDATE',
+                    category: 'misi',
+                    text: `Memperbarui misi: ${savedMisi.title}`,
+                });
+                
+                toast('Misi berhasil diperbarui');
+            } else {
+                // Create new
+                if (!finalMisiData.logo) {
+                    finalMisiData.logo = 'https://picsum.photos/80/80?random=' + Math.floor(Math.random() * 100);
+                }
+                
+                savedMisi = await adminMisiService.create(finalMisiData as Omit<MisiCuanOffer, 'id'>);
+                setMisi(prevMisi => [savedMisi, ...prevMisi]);
+                
+                // Log activity
+                await activityLogsService.create({
+                    type: 'CREATE',
+                    category: 'misi',
+                    text: `Menambahkan misi baru: ${savedMisi.title}`,
+                });
+                
+                toast('Misi berhasil ditambahkan');
+            }
+
+            handleCloseMisiModal();
+        } catch (error) {
+            console.error('Error saving misi:', error);
+            toast('Gagal menyimpan misi');
+        } finally {
+            setLoading(false);
+        }
     };
 
      const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
@@ -149,9 +233,19 @@ const AdminMisi: React.FC<AdminMisiProps> = ({ misi, setMisi, submissions, setSu
         setSelectedSubmission(null);
     };
 
-    const handleUpdateStatus = (submissionId: number, status: 'Approved' | 'Rejected') => {
-        setSubmissions(prev => prev.map(sub => sub.id === submissionId ? { ...sub, status } : sub));
-        handleCloseSubmissionModal();
+    const handleUpdateStatus = async (submissionId: number, status: 'Approved' | 'Rejected') => {
+        try {
+            setLoading(true);
+            const updatedSubmission = await adminMisiService.updateSubmissionStatus(submissionId, status);
+            setSubmissions(prev => prev.map(sub => sub.id === submissionId ? updatedSubmission : sub));
+            toast(`Pengumpulan berhasil ${status === 'Approved' ? 'disetujui' : 'ditolak'}`);
+            handleCloseSubmissionModal();
+        } catch (error) {
+            console.error('Error updating submission status:', error);
+            toast('Gagal memperbarui status');
+        } finally {
+            setLoading(false);
+        }
     };
     
     const statusColor: { [key in MisiSubmission['status']]: string } = {
@@ -164,6 +258,18 @@ const AdminMisi: React.FC<AdminMisiProps> = ({ misi, setMisi, submissions, setSu
         const columns = [ "Judul Misi", "Partner", "Reward", "Kuota", "Deskripsi", "Langkah-langkah Misi", "Instruksi Pengumpulan" ];
         downloadExcelTemplate(columns, 'Template_Import_Misi_Cuan');
     };
+
+    // Loading state UI
+    if (dataLoading) {
+        return (
+            <div className="bg-white p-6 rounded-lg shadow-md">
+                <div className="flex justify-center items-center py-12">
+                    <i className="fas fa-spinner fa-spin text-4xl text-primary"></i>
+                    <span className="ml-3 text-lg text-slate-600">Memuat data...</span>
+                </div>
+            </div>
+        );
+    }
 
     // Main Render Logic
     if (viewingSubmissionsFor) {
@@ -258,9 +364,13 @@ const AdminMisi: React.FC<AdminMisiProps> = ({ misi, setMisi, submissions, setSu
                                 ))}
                             </div>
                             <div className="flex justify-end space-x-3 pt-4 border-t mt-6">
-                                <button type="button" onClick={handleCloseSubmissionModal} className="bg-slate-200 text-slate-800 px-4 py-2 rounded-lg font-medium hover:bg-slate-300">Tutup</button>
-                                <button type="button" onClick={() => handleUpdateStatus(selectedSubmission.id, 'Rejected')} className="bg-red-500 text-white px-4 py-2 rounded-lg font-medium hover:bg-red-600"><i className="fas fa-times-circle mr-2"></i>Tolak</button>
-                                <button type="button" onClick={() => handleUpdateStatus(selectedSubmission.id, 'Approved')} className="bg-green-500 text-white px-4 py-2 rounded-lg font-medium hover:bg-green-600"><i className="fas fa-check-circle mr-2"></i>Setujui</button>
+                                <button type="button" onClick={handleCloseSubmissionModal} className="bg-slate-200 text-slate-800 px-4 py-2 rounded-lg font-medium hover:bg-slate-300" disabled={loading}>Tutup</button>
+                                <button type="button" onClick={() => handleUpdateStatus(selectedSubmission.id, 'Rejected')} className="bg-red-500 text-white px-4 py-2 rounded-lg font-medium hover:bg-red-600 disabled:opacity-50" disabled={loading}>
+                                    {loading ? <><i className="fas fa-spinner fa-spin mr-2"></i>Memproses...</> : <><i className="fas fa-times-circle mr-2"></i>Tolak</>}
+                                </button>
+                                <button type="button" onClick={() => handleUpdateStatus(selectedSubmission.id, 'Approved')} className="bg-green-500 text-white px-4 py-2 rounded-lg font-medium hover:bg-green-600 disabled:opacity-50" disabled={loading}>
+                                    {loading ? <><i className="fas fa-spinner fa-spin mr-2"></i>Memproses...</> : <><i className="fas fa-check-circle mr-2"></i>Setujui</>}
+                                </button>
                             </div>
                         </div>
                     </div>
@@ -407,10 +517,16 @@ const AdminMisi: React.FC<AdminMisiProps> = ({ misi, setMisi, submissions, setSu
                                 </div>
                             </div>
                             <div className="flex justify-end space-x-3 pt-4 border-t mt-6">
-                                <button type="button" onClick={handleCloseMisiModal} className="bg-slate-200 text-slate-800 px-4 py-2 rounded-lg font-medium hover:bg-slate-300">Batal</button>
-                                <button type="button" onClick={() => onShowPreview('misi', currentMisi)} className="bg-slate-500 text-white px-4 py-2 rounded-lg font-medium hover:bg-slate-600"><i className="fas fa-eye mr-2"></i>Preview Detail</button>
-                                <button type="button" onClick={() => onShowPreview('misiSubmissionForm', currentMisi)} className="bg-indigo-500 text-white px-4 py-2 rounded-lg font-medium hover:bg-indigo-600"><i className="fas fa-tasks mr-2"></i>Preview Form</button>
-                                <button type="submit" className="bg-primary text-white px-4 py-2 rounded-lg font-medium hover:bg-blue-700">Simpan</button>
+                                <button type="button" onClick={handleCloseMisiModal} className="bg-slate-200 text-slate-800 px-4 py-2 rounded-lg font-medium hover:bg-slate-300" disabled={loading}>Batal</button>
+                                <button type="button" onClick={() => onShowPreview('misi', currentMisi)} className="bg-slate-500 text-white px-4 py-2 rounded-lg font-medium hover:bg-slate-600" disabled={loading}>
+                                    <i className="fas fa-eye mr-2"></i>Preview Detail
+                                </button>
+                                <button type="button" onClick={() => onShowPreview('misiSubmissionForm', currentMisi)} className="bg-indigo-500 text-white px-4 py-2 rounded-lg font-medium hover:bg-indigo-600" disabled={loading}>
+                                    <i className="fas fa-tasks mr-2"></i>Preview Form
+                                </button>
+                                <button type="submit" className="bg-primary text-white px-4 py-2 rounded-lg font-medium hover:bg-blue-700 disabled:opacity-50" disabled={loading}>
+                                    {loading ? <><i className="fas fa-spinner fa-spin mr-2"></i>Menyimpan...</> : 'Simpan'}
+                                </button>
                             </div>
                         </form>
                     </div>

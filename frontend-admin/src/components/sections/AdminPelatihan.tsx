@@ -2,6 +2,8 @@ import React, { useState, useMemo, useEffect, useCallback } from 'react';
 import { PelatihanInfo } from '../../types';
 import Pagination from '../Pagination';
 import RichTextEditor from '../RichTextEditor';
+import { adminPelatihanService } from '../../services/adminApi';
+import { toast } from '../../utils/toast';
 
 interface AdminPelatihanProps {
     courses: PelatihanInfo[];
@@ -15,6 +17,25 @@ const AdminPelatihan: React.FC<AdminPelatihanProps> = ({ courses, setCourses }) 
     const [currentCourse, setCurrentCourse] = useState<Partial<PelatihanInfo> | null>(null);
     const [currentPage, setCurrentPage] = useState(1);
     const [searchTerm, setSearchTerm] = useState('');
+    const [loading, setLoading] = useState(false);
+    const [dataLoading, setDataLoading] = useState(true);
+
+    useEffect(() => {
+        fetchCourses();
+    }, []);
+
+    const fetchCourses = async () => {
+        try {
+            setDataLoading(true);
+            const data = await adminPelatihanService.getAll();
+            setCourses(data);
+        } catch (error) {
+            console.error('Error fetching courses:', error);
+            toast('Gagal memuat data pelatihan');
+        } finally {
+            setDataLoading(false);
+        }
+    };
 
     useEffect(() => {
         setCurrentPage(1);
@@ -42,29 +63,60 @@ const AdminPelatihan: React.FC<AdminPelatihanProps> = ({ courses, setCourses }) 
         setCurrentCourse(null);
     };
 
-    const handleDelete = (courseId: number) => {
+    const handleDelete = async (courseId: number) => {
         if (window.confirm('Apakah Anda yakin ingin menghapus info pelatihan ini?')) {
-            setCourses(prev => prev.filter(c => c.id !== courseId));
+            try {
+                setLoading(true);
+                await adminPelatihanService.delete(courseId);
+                setCourses(prev => prev.filter(c => c.id !== courseId));
+                toast('Pelatihan berhasil dihapus');
+            } catch (error) {
+                console.error('Error deleting course:', error);
+                toast('Gagal menghapus pelatihan');
+            } finally {
+                setLoading(false);
+            }
         }
     };
 
-    const handleSave = (e: React.FormEvent) => {
+    const handleSave = async (e: React.FormEvent) => {
         e.preventDefault();
         if (!currentCourse) return;
 
-        if (currentCourse.id) {
-            // Update
-            setCourses(prev => prev.map(c => c.id === currentCourse.id ? (currentCourse as PelatihanInfo) : c));
-        } else {
-            // Create
-            const newCourse: PelatihanInfo = {
-                id: Math.max(...courses.map(c => c.id), 0) + 1,
-                image: `https://picsum.photos/seed/course${Date.now()}/400/300`,
-                ...currentCourse
-            } as PelatihanInfo;
-            setCourses(prev => [newCourse, ...prev]);
+        try {
+            setLoading(true);
+            
+            if (currentCourse.id) {
+                // Update
+                const updated = await adminPelatihanService.update(currentCourse.id, currentCourse);
+                setCourses(prev => prev.map(c => c.id === currentCourse.id ? updated : c));
+                toast('Pelatihan berhasil diperbarui');
+            } else {
+                // Create
+                const newCourse = await adminPelatihanService.create({
+                    title: currentCourse.title || '',
+                    category: currentCourse.category || 'Sertifikasi',
+                    organizer: currentCourse.organizer || '',
+                    date: currentCourse.date || '',
+                    location: currentCourse.location || 'Online',
+                    description: currentCourse.description || '',
+                    fullDescription: currentCourse.fullDescription || '',
+                    registrationLink: currentCourse.registrationLink || '',
+                    image: `https://picsum.photos/seed/course${Date.now()}/400/300`,
+                    videoEmbedUrl: currentCourse.videoEmbedUrl || '',
+                    pdfEmbedUrl: currentCourse.pdfEmbedUrl || '',
+                });
+                setCourses(prev => [newCourse, ...prev]);
+                toast('Pelatihan berhasil ditambahkan');
+            }
+            
+            handleCloseModal();
+        } catch (error) {
+            console.error('Error saving course:', error);
+            toast('Gagal menyimpan pelatihan');
+        } finally {
+            setLoading(false);
         }
-        handleCloseModal();
     };
 
     const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) => {
@@ -94,6 +146,17 @@ const AdminPelatihan: React.FC<AdminPelatihanProps> = ({ courses, setCourses }) 
     const handlePageChange = (page: number) => {
         setCurrentPage(page);
     };
+
+    if (dataLoading) {
+        return (
+            <div className="bg-white p-6 rounded-lg shadow-md">
+                <div className="flex justify-center items-center py-12">
+                    <i className="fas fa-spinner fa-spin text-4xl text-primary"></i>
+                    <span className="ml-3 text-lg text-slate-600">Memuat data pelatihan...</span>
+                </div>
+            </div>
+        );
+    }
 
     return (
         <div className="bg-white p-6 rounded-lg shadow-md">
@@ -210,8 +273,10 @@ const AdminPelatihan: React.FC<AdminPelatihanProps> = ({ courses, setCourses }) 
                             </div>
                         </form>
                         <div className="flex justify-end space-x-3 pt-4 border-t mt-6 shrink-0">
-                            <button type="button" onClick={handleCloseModal} className="bg-slate-200 text-slate-800 px-4 py-2 rounded-lg font-medium hover:bg-slate-300">Batal</button>
-                            <button type="submit" form="pelatihan-form" className="bg-primary text-white px-4 py-2 rounded-lg font-medium hover:bg-blue-700">Simpan</button>
+                            <button type="button" onClick={handleCloseModal} className="bg-slate-200 text-slate-800 px-4 py-2 rounded-lg font-medium hover:bg-slate-300" disabled={loading}>Batal</button>
+                            <button type="submit" form="pelatihan-form" className="bg-primary text-white px-4 py-2 rounded-lg font-medium hover:bg-blue-700 disabled:opacity-50" disabled={loading}>
+                                {loading ? <><i className="fas fa-spinner fa-spin mr-2"></i>Menyimpan...</> : 'Simpan'}
+                            </button>
                         </div>
                     </div>
                 </div>

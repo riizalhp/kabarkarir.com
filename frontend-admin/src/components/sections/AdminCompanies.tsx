@@ -3,6 +3,7 @@ import { CompanyProfile, Job, Major, Tag, Activity } from '../../types';
 import { toast } from '../../utils/toast';
 import { downloadExcelTemplate } from '../../utils/excel';
 import Pagination from '../Pagination';
+import { adminCompaniesService, adminJobsService, activityLogsService } from '../../services/adminApi';
 
 // Beri tahu TypeScript tentang objek XLSX global dari CDN
 declare const XLSX: any;
@@ -27,6 +28,8 @@ const AdminCompanies: React.FC<AdminCompaniesProps> = ({ companies, setCompanies
     const [currentCompany, setCurrentCompany] = useState<Partial<CompanyProfile> | null>(null);
     const [selectedCompany, setSelectedCompany] = useState<CompanyProfile | null>(null);
     const [searchTerm, setSearchTerm] = useState('');
+    const [loading, setLoading] = useState(false);
+    const [dataLoading, setDataLoading] = useState(true);
     
     // State untuk modal Lowongan
     const [isJobModalOpen, setIsJobModalOpen] = useState(false);
@@ -35,6 +38,24 @@ const AdminCompanies: React.FC<AdminCompaniesProps> = ({ companies, setCompanies
     // State untuk paginasi
     const [companyPage, setCompanyPage] = useState(1);
     const [jobPage, setJobPage] = useState(1);
+
+    // Fetch companies on mount
+    useEffect(() => {
+        fetchCompanies();
+    }, []);
+
+    const fetchCompanies = async () => {
+        try {
+            setDataLoading(true);
+            const data = await adminCompaniesService.getAll();
+            setCompanies(data);
+        } catch (error) {
+            console.error('Error fetching companies:', error);
+            toast('Gagal memuat data perusahaan');
+        } finally {
+            setDataLoading(false);
+        }
+    };
 
     useEffect(() => {
         setCompanyPage(1);
@@ -51,35 +72,82 @@ const AdminCompanies: React.FC<AdminCompaniesProps> = ({ companies, setCompanies
         setCurrentCompany(null);
     };
 
-    const handleDelete = (companyId: number) => {
+    const handleDelete = async (companyId: number) => {
         if (window.confirm('Apakah Anda yakin ingin menghapus perusahaan ini?')) {
-            const companyToDelete = companies.find(c => c.id === companyId);
-            if (companyToDelete) {
+            try {
+                setLoading(true);
+                const companyToDelete = companies.find(c => c.id === companyId);
+                
+                await adminCompaniesService.delete(companyId);
                 setCompanies(prevCompanies => prevCompanies.filter(c => c.id !== companyId));
-                addActivity({ type: 'DELETE', category: 'Perusahaan', text: `Perusahaan "${companyToDelete.name}" dihapus.` });
+                
+                if (companyToDelete) {
+                    await activityLogsService.create({
+                        type: 'DELETE',
+                        category: 'Perusahaan',
+                        text: `Perusahaan "${companyToDelete.name}" dihapus.`,
+                    });
+                    
+                    addActivity({ type: 'DELETE', category: 'Perusahaan', text: `Perusahaan "${companyToDelete.name}" dihapus.` });
+                }
+                
+                toast('Perusahaan berhasil dihapus');
+            } catch (error) {
+                console.error('Error deleting company:', error);
+                toast('Gagal menghapus perusahaan');
+            } finally {
+                setLoading(false);
             }
         }
     };
 
-    const handleSave = (e: React.FormEvent) => {
+    const handleSave = async (e: React.FormEvent) => {
         e.preventDefault();
         if (!currentCompany) return;
 
-        if (currentCompany.id) {
-            setCompanies(prevCompanies => prevCompanies.map(c => c.id === currentCompany.id ? (currentCompany as CompanyProfile) : c));
-            addActivity({ type: 'UPDATE', category: 'Perusahaan', text: `Data perusahaan "${currentCompany.name}" diperbarui.` });
-        } else {
-            const newCompany: CompanyProfile = {
-                id: Math.max(...companies.map(c => c.id), 0) + 1,
-                slug: currentCompany.name?.toLowerCase().replace(/ /g, '-') || '',
-                logo: currentCompany.logo || 'https://picsum.photos/100/100?random=' + Math.floor(Math.random() * 100),
-                ...currentCompany,
-                jobsAvailable: 0,
-            } as CompanyProfile;
-            setCompanies(prevCompanies => [newCompany, ...prevCompanies]);
-            addActivity({ type: 'CREATE', category: 'Perusahaan', text: `Perusahaan baru ditambahkan: "${newCompany.name}".` });
+        try {
+            setLoading(true);
+            
+            if (currentCompany.id) {
+                const updated = await adminCompaniesService.update(currentCompany.id, currentCompany);
+                setCompanies(prevCompanies => prevCompanies.map(c => c.id === currentCompany.id ? updated : c));
+                
+                await activityLogsService.create({
+                    type: 'UPDATE',
+                    category: 'Perusahaan',
+                    text: `Data perusahaan "${currentCompany.name}" diperbarui.`,
+                });
+                
+                addActivity({ type: 'UPDATE', category: 'Perusahaan', text: `Data perusahaan "${currentCompany.name}" diperbarui.` });
+                toast('Perusahaan berhasil diperbarui');
+            } else {
+                const newCompany = await adminCompaniesService.create({
+                    name: currentCompany.name || '',
+                    logo: currentCompany.logo || '',
+                    description: currentCompany.description || '',
+                    type: currentCompany.type || 'SWASTA',
+                    slug: currentCompany.name?.toLowerCase().replace(/ /g, '-') || '',
+                });
+                
+                setCompanies(prevCompanies => [newCompany, ...prevCompanies]);
+                
+                await activityLogsService.create({
+                    type: 'CREATE',
+                    category: 'Perusahaan',
+                    text: `Perusahaan baru ditambahkan: "${newCompany.name}".`,
+                });
+                
+                addActivity({ type: 'CREATE', category: 'Perusahaan', text: `Perusahaan baru ditambahkan: "${newCompany.name}".` });
+                toast('Perusahaan berhasil ditambahkan');
+            }
+            
+            handleCloseModal();
+        } catch (error) {
+            console.error('Error saving company:', error);
+            toast('Gagal menyimpan perusahaan');
+        } finally {
+            setLoading(false);
         }
-        handleCloseModal();
     };
     
     const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) => {
@@ -274,6 +342,17 @@ const AdminCompanies: React.FC<AdminCompaniesProps> = ({ companies, setCompanies
     const totalCompanyPages = Math.ceil(filteredCompanies.length / COMPANY_ITEMS_PER_PAGE);
     const currentCompanies = filteredCompanies.slice((companyPage - 1) * COMPANY_ITEMS_PER_PAGE, companyPage * COMPANY_ITEMS_PER_PAGE);
     
+    if (dataLoading) {
+        return (
+            <div className="bg-white p-6 rounded-lg shadow-md">
+                <div className="flex justify-center items-center py-12">
+                    <i className="fas fa-spinner fa-spin text-4xl text-primary"></i>
+                    <span className="ml-3 text-lg text-slate-600">Memuat data perusahaan...</span>
+                </div>
+            </div>
+        );
+    }
+    
     return (
         <div className="bg-white p-6 rounded-lg shadow-md">
             <div className="flex justify-between items-center mb-4 flex-wrap gap-4">
@@ -330,9 +409,11 @@ const AdminCompanies: React.FC<AdminCompaniesProps> = ({ companies, setCompanies
                             <div><label>Tipe</label><select name="type" value={currentCompany.type} onChange={handleInputChange} className="mt-1 block w-full px-3 py-2 border rounded-md"><option>BUMN</option><option>SWASTA</option><option>INSTANSI</option></select></div>
                             <div><label>Deskripsi</label><textarea name="description" value={currentCompany.description} onChange={handleInputChange} rows={3} className="mt-1 block w-full px-3 py-2 border rounded-md" /></div>
                             <div className="flex justify-end space-x-3 pt-4 border-t mt-6">
-                                <button type="button" onClick={handleCloseModal} className="bg-slate-200 px-4 py-2 rounded-lg">Batal</button>
-                                <button type="button" onClick={() => onShowPreview('company', currentCompany)} className="bg-slate-500 text-white px-4 py-2 rounded-lg"><i className="fas fa-eye mr-2"></i>Preview</button>
-                                <button type="submit" className="bg-primary text-white px-4 py-2 rounded-lg">Simpan</button>
+                                <button type="button" onClick={handleCloseModal} className="bg-slate-200 px-4 py-2 rounded-lg" disabled={loading}>Batal</button>
+                                <button type="button" onClick={() => onShowPreview('company', currentCompany)} className="bg-slate-500 text-white px-4 py-2 rounded-lg" disabled={loading}><i className="fas fa-eye mr-2"></i>Preview</button>
+                                <button type="submit" className="bg-primary text-white px-4 py-2 rounded-lg disabled:opacity-50" disabled={loading}>
+                                    {loading ? <><i className="fas fa-spinner fa-spin mr-2"></i>Menyimpan...</> : 'Simpan'}
+                                </button>
                             </div>
                         </form>
                     </div>
@@ -359,9 +440,11 @@ const AdminCompanies: React.FC<AdminCompaniesProps> = ({ companies, setCompanies
                                 <select name="education" value={currentJob.education} onChange={handleJobInputChange} className="px-3 py-2 border rounded-md"><option>SMA/SMK</option><option>Diploma III</option><option>Strata 1</option><option>Strata 2</option></select>
                             </div>
                             <div className="flex justify-end space-x-3 pt-4 border-t mt-6">
-                                <button type="button" onClick={handleCloseJobModal} className="bg-slate-200 px-4 py-2 rounded-lg">Batal</button>
-                                <button type="button" onClick={() => onShowPreview('job', currentJob)} className="bg-slate-500 text-white px-4 py-2 rounded-lg"><i className="fas fa-eye mr-2"></i>Preview</button>
-                                <button type="submit" className="bg-primary text-white px-4 py-2 rounded-lg">Simpan</button>
+                                <button type="button" onClick={handleCloseJobModal} className="bg-slate-200 px-4 py-2 rounded-lg" disabled={loading}>Batal</button>
+                                <button type="button" onClick={() => onShowPreview('job', currentJob)} className="bg-slate-500 text-white px-4 py-2 rounded-lg" disabled={loading}><i className="fas fa-eye mr-2"></i>Preview</button>
+                                <button type="submit" className="bg-primary text-white px-4 py-2 rounded-lg disabled:opacity-50" disabled={loading}>
+                                    {loading ? <><i className="fas fa-spinner fa-spin mr-2"></i>Menyimpan...</> : 'Simpan'}
+                                </button>
                             </div>
                         </form>
                     </div>

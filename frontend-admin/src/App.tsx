@@ -2,7 +2,6 @@ import React, { useState, useEffect } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import ToastContainer from './components/ToastContainer';
 import AppRoutes from './AppRoutes';
-import { INITIAL_JOBS, INITIAL_BLOG_POSTS, INITIAL_MISI_CUAN_OFFERS, INITIAL_COMPANY_PROFILES, INITIAL_RECRUITMENT_EVENTS, INITIAL_PELATIHAN_INFO, INITIAL_MAJORS, INITIAL_MISI_SUBMISSIONS, INITIAL_TAGS } from './constants';
 import { Job, BlogPost, MisiCuanOffer, CompanyProfile, RecruitmentEvent, PelatihanInfo, Major, MisiSubmission, Tag, Activity } from './types';
 import { adminAuth } from './lib/supabase';
 
@@ -11,15 +10,16 @@ const App: React.FC = () => {
   const navigate = useNavigate();
   
   // --- STATE MANAGEMENT ---
-  const [jobs, setJobs] = useState<Job[]>(INITIAL_JOBS);
-  const [blogPosts, setBlogPosts] = useState<BlogPost[]>(INITIAL_BLOG_POSTS);
-  const [misiOffers, setMisiOffers] = useState<MisiCuanOffer[]>(INITIAL_MISI_CUAN_OFFERS);
-  const [misiSubmissions, setMisiSubmissions] = useState<MisiSubmission[]>(INITIAL_MISI_SUBMISSIONS);
-  const [companies, setCompanies] = useState<CompanyProfile[]>(INITIAL_COMPANY_PROFILES);
-  const [events, setEvents] = useState<RecruitmentEvent[]>(INITIAL_RECRUITMENT_EVENTS);
-  const [courses, setCourses] = useState<PelatihanInfo[]>(INITIAL_PELATIHAN_INFO);
-  const [majors, setMajors] = useState<Major[]>(INITIAL_MAJORS);
-  const [tags, setTags] = useState<Tag[]>(INITIAL_TAGS);
+  // Admin components will fetch and manage data using adminApi services
+  const [jobs, setJobs] = useState<Job[]>([]);
+  const [blogPosts, setBlogPosts] = useState<BlogPost[]>([]);
+  const [misiOffers, setMisiOffers] = useState<MisiCuanOffer[]>([]);
+  const [misiSubmissions, setMisiSubmissions] = useState<MisiSubmission[]>([]);
+  const [companies, setCompanies] = useState<CompanyProfile[]>([]);
+  const [events, setEvents] = useState<RecruitmentEvent[]>([]);
+  const [courses, setCourses] = useState<PelatihanInfo[]>([]);
+  const [majors, setMajors] = useState<Major[]>([]);
+  const [tags, setTags] = useState<Tag[]>([]);
   const [recentActivities, setRecentActivities] = useState<Activity[]>([]);
   const [isLoggedIn, setIsLoggedIn] = useState<boolean>(false);
   const [currentUser, setCurrentUser] = useState<any>(null);

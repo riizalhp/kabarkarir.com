@@ -1,7 +1,8 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { RecruitmentEvent, Company, BlogPost } from '../types';
 import Sidebar from './Sidebar';
 import { toast } from '../utils/toast';
+import { viewTrackingService } from '../services/viewTracking';
 
 interface EventDetailPageProps {
   event: RecruitmentEvent;
@@ -17,6 +18,13 @@ interface EventDetailPageProps {
 
 const EventDetailPage: React.FC<EventDetailPageProps> = ({ event, onNavigateToBlog, onNavigateToEventRecruitment, onSelectEvent, onSelectCompany, isPreviewMode = false, trendingCompanies, latestArticles, allEvents }) => {
   const [activeTab, setActiveTab] = useState('Tentang Event');
+
+  // Track event view
+  useEffect(() => {
+    if (event && !isPreviewMode) {
+      viewTrackingService.trackEventView(event.id);
+    }
+  }, [event, isPreviewMode]);
 
   const getEmbeddableGoogleDriveUrl = (url: string): string => {
     if (!url) return '';

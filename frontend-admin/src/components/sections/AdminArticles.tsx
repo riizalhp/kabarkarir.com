@@ -2,6 +2,8 @@ import * as React from 'react';
 import { BlogPost, Activity } from '../../types';
 import RichTextEditor from '../RichTextEditor';
 import Pagination from '../Pagination';
+import { adminBlogService, activityLogsService } from '../../services/adminApi';
+import { toast } from '../../utils/toast';
 
 interface AdminArticlesProps {
   articles: BlogPost[];
@@ -17,6 +19,25 @@ const AdminArticles: React.FC<AdminArticlesProps> = ({ articles, setArticles, on
     const [currentArticle, setCurrentArticle] = React.useState<Partial<BlogPost> | null>(null);
     const [currentPage, setCurrentPage] = React.useState(1);
     const [searchTerm, setSearchTerm] = React.useState('');
+    const [loading, setLoading] = React.useState(false);
+    const [dataLoading, setDataLoading] = React.useState(true);
+
+    React.useEffect(() => {
+        fetchArticles();
+    }, []);
+
+    const fetchArticles = async () => {
+        try {
+            setDataLoading(true);
+            const data = await adminBlogService.getAll();
+            setArticles(data);
+        } catch (error) {
+            console.error('Error fetching articles:', error);
+            toast('Gagal memuat data artikel');
+        } finally {
+            setDataLoading(false);
+        }
+    };
 
     React.useEffect(() => {
         setCurrentPage(1);
@@ -32,54 +53,101 @@ const AdminArticles: React.FC<AdminArticlesProps> = ({ articles, setArticles, on
         setCurrentArticle(null);
     };
 
-    const handleDelete = (articleId: number) => {
+    const handleDelete = async (articleId: number) => {
         if (window.confirm('Apakah Anda yakin ingin menghapus artikel ini?')) {
-            const articleToDelete = articles.find(a => a.id === articleId);
-            if (articleToDelete) {
+            try {
+                setLoading(true);
+                const articleToDelete = articles.find(a => a.id === articleId);
+                
+                await adminBlogService.delete(articleId);
                 setArticles(prevArticles => prevArticles.filter(a => a.id !== articleId));
-                 addActivity({
-                    type: 'DELETE',
-                    category: 'Artikel',
-                    text: `Artikel "${articleToDelete.title}" dihapus.`
-                });
+                
+                if (articleToDelete) {
+                    await activityLogsService.create({
+                        type: 'DELETE',
+                        category: 'Artikel',
+                        text: `Artikel "${articleToDelete.title}" dihapus.`,
+                    });
+                    
+                    addActivity({
+                        type: 'DELETE',
+                        category: 'Artikel',
+                        text: `Artikel "${articleToDelete.title}" dihapus.`
+                    });
+                }
+                
+                toast('Artikel berhasil dihapus');
+            } catch (error) {
+                console.error('Error deleting article:', error);
+                toast('Gagal menghapus artikel');
+            } finally {
+                setLoading(false);
             }
         }
     };
 
-    const handleSave = (e: React.FormEvent) => {
+    const handleSave = async (e: React.FormEvent) => {
         e.preventDefault();
         if (!currentArticle) return;
 
-        // Generate description from content if description is empty
-        const description = currentArticle.description || (currentArticle.content || '').replace(/<[^>]+>/g, '').substring(0, 150) + '...';
+        try {
+            setLoading(true);
+            
+            // Generate description from content if description is empty
+            const description = currentArticle.description || (currentArticle.content || '').replace(/<[^>]+>/g, '').substring(0, 150) + '...';
+            const finalArticle = { ...currentArticle, description };
 
-        const finalArticle = { ...currentArticle, description };
-
-        if (finalArticle.id) {
-            // Update
-            setArticles(prevArticles => prevArticles.map(a => a.id === finalArticle.id ? (finalArticle as BlogPost) : a));
-            addActivity({
-              type: 'UPDATE',
-              category: 'Artikel',
-              text: `Artikel "${finalArticle.title}" diperbarui.`
-            });
-        } else {
-            // Create
-            const newArticle: BlogPost = {
-                id: Math.max(...articles.map(a => a.id), 0) + 1,
-                posted: 'Baru saja',
-                image: finalArticle.image || 'https://picsum.photos/seed/newblog/400/300',
-                categoryColor: 'blue',
-                ...finalArticle
-            } as BlogPost;
-            setArticles(prevArticles => [newArticle, ...prevArticles]);
-            addActivity({
-                type: 'CREATE',
-                category: 'Artikel',
-                text: `Artikel baru ditambahkan: "${newArticle.title}".`
-            });
+            if (finalArticle.id) {
+                // Update
+                const updated = await adminBlogService.update(finalArticle.id, finalArticle);
+                setArticles(prevArticles => prevArticles.map(a => a.id === finalArticle.id ? updated : a));
+                
+                await activityLogsService.create({
+                    type: 'UPDATE',
+                    category: 'Artikel',
+                    text: `Artikel "${finalArticle.title}" diperbarui.`,
+                });
+                
+                addActivity({
+                    type: 'UPDATE',
+                    category: 'Artikel',
+                    text: `Artikel "${finalArticle.title}" diperbarui.`
+                });
+                
+                toast('Artikel berhasil diperbarui');
+            } else {
+                // Create
+                const newArticle = await adminBlogService.create({
+                    ...finalArticle,
+                    posted: new Date().toISOString(),
+                    image: finalArticle.image || 'https://picsum.photos/seed/newblog/400/300',
+                    categoryColor: 'blue',
+                } as Omit<BlogPost, 'id'>);
+                
+                setArticles(prevArticles => [newArticle, ...prevArticles]);
+                
+                await activityLogsService.create({
+                    type: 'CREATE',
+                    category: 'Artikel',
+                    text: `Artikel baru ditambahkan: "${newArticle.title}".`,
+                });
+                
+                addActivity({
+                    type: 'CREATE',
+                    category: 'Artikel',
+                    text: `Artikel baru ditambahkan: "${newArticle.title}".`
+                });
+                
+                toast('Artikel berhasil ditambahkan');
+            }
+            
+            handleCloseModal();
+        } catch (error) {
+            console.error('Error saving article:', error);
+            toast('Gagal menyimpan artikel');
+        } finally {
+            setLoading(false);
         }
-        handleCloseModal();
     };
 
     const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) => {
@@ -107,6 +175,17 @@ const AdminArticles: React.FC<AdminArticlesProps> = ({ articles, setArticles, on
     const handlePageChange = (page: number) => {
         setCurrentPage(page);
     };
+    
+    if (dataLoading) {
+        return (
+            <div className="bg-white p-6 rounded-lg shadow-md">
+                <div className="flex justify-center items-center py-12">
+                    <i className="fas fa-spinner fa-spin text-4xl text-primary"></i>
+                    <span className="ml-3 text-lg text-slate-600">Memuat data artikel...</span>
+                </div>
+            </div>
+        );
+    }
     
     return (
         <div className="bg-white p-6 rounded-lg shadow-md">
@@ -188,11 +267,13 @@ const AdminArticles: React.FC<AdminArticlesProps> = ({ articles, setArticles, on
                             </div>
                          </form>
                          <div className="flex justify-end space-x-3 pt-4 border-t mt-6 shrink-0">
-                            <button type="button" onClick={handleCloseModal} className="bg-slate-200 text-slate-800 px-4 py-2 rounded-lg font-medium hover:bg-slate-300">Batal</button>
-                            <button type="button" onClick={() => onShowPreview('article', currentArticle)} className="bg-slate-500 text-white px-4 py-2 rounded-lg font-medium hover:bg-slate-600">
+                            <button type="button" onClick={handleCloseModal} className="bg-slate-200 text-slate-800 px-4 py-2 rounded-lg font-medium hover:bg-slate-300" disabled={loading}>Batal</button>
+                            <button type="button" onClick={() => onShowPreview('article', currentArticle)} className="bg-slate-500 text-white px-4 py-2 rounded-lg font-medium hover:bg-slate-600" disabled={loading}>
                                 <i className="fas fa-eye mr-2"></i>Preview
                             </button>
-                            <button type="submit" form="article-form" className="bg-primary text-white px-4 py-2 rounded-lg font-medium hover:bg-blue-700">Simpan</button>
+                            <button type="submit" form="article-form" className="bg-primary text-white px-4 py-2 rounded-lg font-medium hover:bg-blue-700 disabled:opacity-50" disabled={loading}>
+                                {loading ? <><i className="fas fa-spinner fa-spin mr-2"></i>Menyimpan...</> : 'Simpan'}
+                            </button>
                         </div>
                     </div>
                 </div>

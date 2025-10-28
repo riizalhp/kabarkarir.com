@@ -3,6 +3,7 @@ import { Major } from '../../types';
 import { toast } from '../../utils/toast';
 import { downloadExcelTemplate } from '../../utils/excel';
 import Pagination from '../Pagination';
+import { adminMajorsService } from '../../services/adminApi';
 
 // Beri tahu TypeScript tentang objek XLSX global dari CDN
 declare const XLSX: any;
@@ -19,6 +20,25 @@ const AdminMajors: React.FC<AdminMajorsProps> = ({ majors, setMajors }) => {
     const [currentMajor, setCurrentMajor] = useState<Partial<Major> | null>(null);
     const [searchTerm, setSearchTerm] = useState('');
     const [currentPage, setCurrentPage] = useState(1);
+    const [loading, setLoading] = useState(false);
+    const [dataLoading, setDataLoading] = useState(true);
+    
+    useEffect(() => {
+        fetchMajors();
+    }, []);
+
+    const fetchMajors = async () => {
+        try {
+            setDataLoading(true);
+            const data = await adminMajorsService.getAll();
+            setMajors(data);
+        } catch (error) {
+            console.error('Error fetching majors:', error);
+            toast('Gagal memuat data jurusan');
+        } finally {
+            setDataLoading(false);
+        }
+    };
     
     useEffect(() => {
         setCurrentPage(1);
@@ -34,28 +54,48 @@ const AdminMajors: React.FC<AdminMajorsProps> = ({ majors, setMajors }) => {
         setCurrentMajor(null);
     };
 
-    const handleDelete = (majorId: number) => {
+    const handleDelete = async (majorId: number) => {
         if (window.confirm('Apakah Anda yakin ingin menghapus jurusan ini? Ini dapat mempengaruhi data lowongan yang ada.')) {
-            setMajors(prevMajors => prevMajors.filter(m => m.id !== majorId));
+            try {
+                setLoading(true);
+                await adminMajorsService.delete(majorId);
+                setMajors(prevMajors => prevMajors.filter(m => m.id !== majorId));
+                toast('Jurusan berhasil dihapus');
+            } catch (error) {
+                console.error('Error deleting major:', error);
+                toast('Gagal menghapus jurusan');
+            } finally {
+                setLoading(false);
+            }
         }
     };
 
-    const handleSave = (e: React.FormEvent) => {
+    const handleSave = async (e: React.FormEvent) => {
         e.preventDefault();
         if (!currentMajor || !currentMajor.name?.trim()) return;
 
-        if (currentMajor.id) {
-            // Update
-            setMajors(prevMajors => prevMajors.map(m => m.id === currentMajor.id ? (currentMajor as Major) : m));
-        } else {
-            // Create
-            const newMajor: Major = {
-                id: Math.max(...majors.map(m => m.id), 0) + 1,
-                name: currentMajor.name.trim(),
-            };
-            setMajors(prevMajors => [newMajor, ...prevMajors]);
+        try {
+            setLoading(true);
+            
+            if (currentMajor.id) {
+                // Update (not commonly used for majors, but keeping for consistency)
+                const updated = await adminMajorsService.create({ name: currentMajor.name.trim() });
+                setMajors(prevMajors => prevMajors.map(m => m.id === currentMajor.id ? updated : m));
+                toast('Jurusan berhasil diperbarui');
+            } else {
+                // Create
+                const newMajor = await adminMajorsService.create({ name: currentMajor.name.trim() });
+                setMajors(prevMajors => [newMajor, ...prevMajors]);
+                toast('Jurusan berhasil ditambahkan');
+            }
+            
+            handleCloseModal();
+        } catch (error) {
+            console.error('Error saving major:', error);
+            toast('Gagal menyimpan jurusan');
+        } finally {
+            setLoading(false);
         }
-        handleCloseModal();
     };
     
     const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -131,6 +171,17 @@ const AdminMajors: React.FC<AdminMajorsProps> = ({ majors, setMajors }) => {
     const handlePageChange = (page: number) => {
         setCurrentPage(page);
     };
+
+    if (dataLoading) {
+        return (
+            <div className="bg-white p-6 rounded-lg shadow-md">
+                <div className="flex justify-center items-center py-12">
+                    <i className="fas fa-spinner fa-spin text-4xl text-primary"></i>
+                    <span className="ml-3 text-lg text-slate-600">Memuat data jurusan...</span>
+                </div>
+            </div>
+        );
+    }
 
     return (
         <div className="bg-white p-6 rounded-lg shadow-md">
@@ -208,8 +259,10 @@ const AdminMajors: React.FC<AdminMajorsProps> = ({ majors, setMajors }) => {
                                 />
                             </div>
                             <div className="flex justify-end space-x-3 pt-4 border-t mt-6">
-                                <button type="button" onClick={handleCloseModal} className="bg-slate-200 text-slate-800 px-4 py-2 rounded-lg font-medium hover:bg-slate-300">Batal</button>
-                                <button type="submit" className="bg-primary text-white px-4 py-2 rounded-lg font-medium hover:bg-blue-700">Simpan</button>
+                                <button type="button" onClick={handleCloseModal} className="bg-slate-200 text-slate-800 px-4 py-2 rounded-lg font-medium hover:bg-slate-300" disabled={loading}>Batal</button>
+                                <button type="submit" className="bg-primary text-white px-4 py-2 rounded-lg font-medium hover:bg-blue-700 disabled:opacity-50" disabled={loading}>
+                                    {loading ? <><i className="fas fa-spinner fa-spin mr-2"></i>Menyimpan...</> : 'Simpan'}
+                                </button>
                             </div>
                         </form>
                     </div>

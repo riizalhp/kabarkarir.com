@@ -19,6 +19,7 @@ type PreviewableItem = 'job' | 'company' | 'article' | 'event' | 'misi' | 'misiS
 
 interface AdminPageProps {
   onNavigateHome: () => void;
+  onLogout?: () => void;
   jobs: Job[];
   setJobs: React.Dispatch<React.SetStateAction<Job[]>>;
   companies: CompanyProfile[];
@@ -55,8 +56,10 @@ const NavItem: React.FC<{
   return (
     <button
       onClick={() => setSection(sectionName)}
-      className={`w-full flex items-center space-x-3 px-4 py-2.5 rounded-lg transition-colors ${
-        isActive ? 'bg-primary text-white' : 'text-slate-300 hover:bg-primary/50 hover:text-white'
+      className={`w-full flex items-center space-x-3 px-4 py-2.5 rounded-lg transition-all duration-200 ${
+        isActive 
+          ? 'bg-primary text-white shadow-md' 
+          : 'text-slate-300 hover:bg-slate-700 hover:text-white'
       }`}
     >
       <i className={`${icon} w-5 text-center`}></i>
@@ -68,6 +71,7 @@ const NavItem: React.FC<{
 const AdminPage: React.FC<AdminPageProps> = (props) => {
   const {
     onNavigateHome,
+    onLogout,
     jobs, setJobs,
     companies, setCompanies,
     blogPosts, setBlogPosts,
@@ -170,22 +174,29 @@ const AdminPage: React.FC<AdminPageProps> = (props) => {
   return (
     <div className="flex h-screen bg-slate-100 font-poppins text-slate-800 relative">
       {/* Sidebar */}
-      <aside className="w-64 bg-secondary text-white flex flex-col shrink-0">
-        <div className="flex items-center justify-center p-4 border-b border-slate-700 h-16">
+      <aside className="w-64 bg-secondary text-white flex flex-col shrink-0 overflow-hidden">
+        <div className="flex items-center justify-center p-4 border-b border-slate-700 h-16 shrink-0">
           <h1 className="text-xl font-bold">Admin Panel</h1>
         </div>
-        <nav className="flex-1 p-2 space-y-1">
+        <nav className="flex-1 p-2 space-y-1 overflow-y-auto overflow-x-hidden scrollbar-thin scrollbar-thumb-slate-600 scrollbar-track-slate-800">
           {navItems.map(item => (
             <NavItem key={item.sectionName} {...item} currentSection={section} setSection={setSection} />
           ))}
         </nav>
-        <div className="p-2 border-t border-slate-700">
+        <div className="p-2 border-t border-slate-700 shrink-0 space-y-1">
           <button
             onClick={onNavigateHome}
             className="w-full flex items-center space-x-3 px-4 py-2.5 rounded-lg text-slate-300 hover:bg-slate-700 hover:text-white transition-colors"
           >
+            <i className="fas fa-globe w-5 text-center"></i>
+            <span className="font-medium text-sm">Lihat Situs</span>
+          </button>
+          <button
+            onClick={onLogout}
+            className="w-full flex items-center space-x-3 px-4 py-2.5 rounded-lg text-red-300 hover:bg-red-600 hover:text-white transition-colors"
+          >
             <i className="fas fa-sign-out-alt w-5 text-center"></i>
-            <span className="font-medium">Kembali ke Situs</span>
+            <span className="font-medium text-sm">Logout</span>
           </button>
         </div>
       </aside>
@@ -194,6 +205,14 @@ const AdminPage: React.FC<AdminPageProps> = (props) => {
       <div className="flex-1 flex flex-col overflow-hidden">
         <header className="bg-white shadow-sm p-4 flex justify-between items-center h-16 shrink-0">
           <h2 className="text-xl font-bold text-secondary">{getSectionTitle()}</h2>
+          <button
+            onClick={onLogout}
+            className="flex items-center space-x-2 px-4 py-2 rounded-lg bg-red-500 text-white hover:bg-red-600 transition-colors text-sm font-medium"
+            title="Logout"
+          >
+            <i className="fas fa-sign-out-alt"></i>
+            <span>Logout</span>
+          </button>
         </header>
         <main className="flex-1 overflow-x-hidden overflow-y-auto bg-slate-100 p-6">
           {renderSection()}

@@ -41,6 +41,31 @@
       color: #333;
       background-color: #f5f7fa;
     }
+
+    /* Custom Scrollbar for Sidebar */
+    .scrollbar-thin::-webkit-scrollbar {
+      width: 6px;
+    }
+    
+    .scrollbar-thin::-webkit-scrollbar-track {
+      background: #1F2937;
+      border-radius: 3px;
+    }
+    
+    .scrollbar-thin::-webkit-scrollbar-thumb {
+      background: #4B5563;
+      border-radius: 3px;
+    }
+    
+    .scrollbar-thin::-webkit-scrollbar-thumb:hover {
+      background: #6B7280;
+    }
+
+    /* For Firefox */
+    .scrollbar-thin {
+      scrollbar-width: thin;
+      scrollbar-color: #4B5563 #1F2937;
+    }
   </style>
 </head>
 <body>

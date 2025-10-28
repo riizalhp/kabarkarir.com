@@ -22,6 +22,7 @@ export interface CompanyProfile {
   description: string;
   jobsAvailable: number;
   type: 'BUMN' | 'SWASTA' | 'INSTANSI';
+  view_count?: number;
 }
 
 export interface Job {
@@ -83,6 +84,7 @@ export interface RecruitmentEvent {
   mapDirectionUrl?: string;
   pdfEmbedUrl?: string;
   videoEmbedUrl?: string;
+  view_count?: number;
 }
 
 export interface BlogPost {
@@ -94,6 +96,7 @@ export interface BlogPost {
   description: string;
   posted: string;
   content?: string;
+  view_count?: number;
 }
 
 export interface SubmissionField {

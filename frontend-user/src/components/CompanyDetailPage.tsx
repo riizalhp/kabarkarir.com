@@ -3,6 +3,7 @@ import { Job, CompanyProfile, Company, RecruitmentEvent, BlogPost } from '../typ
 import JobCard from './JobCard';
 import Sidebar from './Sidebar';
 import Pagination from './Pagination';
+import { viewTrackingService } from '../services/viewTracking';
 
 interface CompanyDetailPageProps {
   companySlug?: string;
@@ -30,6 +31,13 @@ const CompanyDetailPage: React.FC<CompanyDetailPageProps> = ({ companySlug, comp
   const [education, setEducation] = useState('Semua');
 
   const company = companyPreview || allCompanies.find(c => c.slug === companySlug);
+
+  // Track company view
+  useEffect(() => {
+    if (company && !isPreviewMode) {
+      viewTrackingService.trackCompanyView(company.id);
+    }
+  }, [company, isPreviewMode]);
 
   useEffect(() => {
     setCurrentPage(1);
