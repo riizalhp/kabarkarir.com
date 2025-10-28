@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="KabarKarir.com - Admin Dashboard">
+  <title>Admin Dashboard - KabarKarir.com</title>
+  
+  <!-- Favicon -->
+  <link rel="icon" type="image/x-icon" href="/favicon.ico">
+  <link rel="shortcut icon" type="image/x-icon" href="/favicon.ico">
+  
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  
+  <script src="https://cdn.tailwindcss.com"></script>
+  
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" integrity="sha512-iecdLmaskl7CVkqkXNQ/ZH/XLlvWZOJyj7Yy7tcenmpD1ypASozpmT/E0iPtmFIB46ZmdtAc9eNBvH0H/ZpiBw==" crossorigin="anonymous" referrerpolicy="no-referrer" />
+  
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          fontFamily: {
+            'poppins': ['Poppins', 'sans-serif'],
+          },
+          colors: {
+            'primary': '#3BADEF',
+            'secondary': '#1F2937',
+            'accent': '#F9812A',
+            'light': '#f8fafc',
+          },
+        }
+      }
+    }
+  </script>
+  <style>
+     body {
+      font-family: 'Poppins', 'sans-serif';
+      color: #333;
+      background-color: #f5f7fa;
+    }
+  </style>
+</head>
+<body>
+  <div id="root"></div>
+
+  <!-- Add SheetJS/xlsx library for Excel export -->
+  <script src="https://cdn.jsdelivr.net/npm/xlsx/dist/xlsx.full.min.js"></script>
+  <script type="module" src="/src/index.tsx"></script>
+</body>
+</html>
