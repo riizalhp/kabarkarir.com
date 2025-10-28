@@ -290,11 +290,20 @@ const App: React.FC = () => {
       case 'konsulKarir':
         window.location.href = '/konsul-karir';
         break;
+      case 'konsulKarirOnGoing':
+        window.location.href = '/konsul-karir/ongoing';
+        break;
       case 'bangunCv':
         window.location.href = '/bangun-cv';
         break;
+      case 'bangunCvOnGoing':
+        window.location.href = '/bangun-cv/ongoing';
+        break;
       case 'pasangIklan':
         window.location.href = '/pasang-iklan';
+        break;
+      case 'pasangIklanOnGoing':
+        window.location.href = '/pasang-iklan/ongoing';
         break;
       case 'eventRecruitment':
         window.location.href = '/event';
