@@ -23,8 +23,8 @@ const CompanyCard: React.FC<CompanyCardProps> = ({ company, onSelectCompany }) =
       </div>
       <p className="text-sm text-gray-600 text-truncate-2 flex-grow">{company.description}</p>
       <div className="w-full mt-auto text-right">
-        <span className="text-primary font-medium hover:text-blue-700 cursor-pointer transition text-sm inline-flex items-center">
-          Lihat Detail <i className="fas fa-arrow-right ml-2"></i>
+        <span className="text-gray-900 font-medium hover:text-gray-700 cursor-pointer transition text-sm">
+          Lihat Detail
         </span>
       </div>
     </div>
