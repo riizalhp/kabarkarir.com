@@ -172,41 +172,91 @@ const AdminCompanies: React.FC<AdminCompaniesProps> = ({ companies, setCompanies
     };
     
     // --- Handler untuk Impor/Ekspor Perusahaan ---
-    const handleFileImport = (event: Event) => {
+    const handleFileImport = async (event: Event) => {
         const file = (event.target as HTMLInputElement).files?.[0];
         if (!file) return;
 
         const reader = new FileReader();
-        reader.onload = (e) => {
+        reader.onload = async (e) => {
             try {
+                setLoading(true);
                 const data = new Uint8Array(e.target?.result as ArrayBuffer);
                 const workbook = XLSX.read(data, { type: 'array' });
                 const sheetName = workbook.SheetNames[0];
                 const worksheet = workbook.Sheets[sheetName];
                 const json: any[] = XLSX.utils.sheet_to_json(worksheet);
 
-                const currentMaxId = Math.max(0, ...companies.map(c => c.id));
-                let nextId = currentMaxId + 1;
+                const newCompanies: CompanyProfile[] = [];
+                let successCount = 0;
+                let errorCount = 0;
 
-                const newCompanies: CompanyProfile[] = json.map((row: any) => {
-                    const name = row['Nama Perusahaan'] || row['name'];
-                    const type = row['Tipe'] || row['type'];
-                    if (!name || !type || !['BUMN', 'SWASTA', 'INSTANSI'].includes(String(type).toUpperCase())) return null;
-                    
-                    return {
-                        id: nextId++, name: String(name).trim(), slug: String(name).trim().toLowerCase().replace(/[^a-z0-9]+/g, '-'),
-                        logo: `https://picsum.photos/100/100?random=${nextId}`, description: String(row['Deskripsi'] || '').trim(),
-                        jobsAvailable: 0, type: String(type).toUpperCase() as 'BUMN' | 'SWASTA' | 'INSTANSI',
-                    };
-                }).filter((c): c is CompanyProfile => c !== null);
-
-                if (newCompanies.length > 0) {
-                    setCompanies(prev => [...prev, ...newCompanies]);
-                    toast(`${newCompanies.length} perusahaan berhasil diimpor.`);
-                } else {
-                    toast('Tidak ada perusahaan valid yang ditemukan di file.');
+                for (const row of json) {
+                    try {
+                        const name = row['Nama Perusahaan'] || row['name'];
+                        const type = row['Tipe'] || row['type'];
+                        const logo = row['URL Logo'] || row['logo'] || '';
+                        const website = row['Website Resmi'] || row['website'] || '';
+                        const description = row['Deskripsi'] || row['description'] || '';
+                        
+                        if (!name || !type || !['BUMN', 'SWASTA', 'INSTANSI'].includes(String(type).toUpperCase())) {
+                            console.warn('Skipping invalid row:', row);
+                            errorCount++;
+                            continue;
+                        }
+                        
+                        // Create company in database
+                        const newCompany = await adminCompaniesService.create({
+                            name: String(name).trim(),
+                            slug: String(name).trim().toLowerCase().replace(/[^a-z0-9]+/g, '-'),
+                            logo: String(logo).trim(),
+                            description: String(description).trim(),
+                            type: String(type).toUpperCase() as 'BUMN' | 'SWASTA' | 'INSTANSI',
+                            website: String(website).trim(),
+                        });
+                        
+                        newCompanies.push(newCompany);
+                        successCount++;
+                    } catch (error) {
+                        console.error('Error creating company:', error);
+                        errorCount++;
+                    }
                 }
-            } catch (error) { toast('Gagal mengimpor file.'); }
+
+                if (successCount > 0) {
+                    setCompanies(prev => [...newCompanies, ...prev]);
+                    toast(`${successCount} perusahaan berhasil diimpor ke database.`);
+                    
+                    // Log activity
+                    try {
+                        await activityLogsService.create({
+                            type: 'CREATE',
+                            category: 'Perusahaan',
+                            text: `${successCount} perusahaan diimpor dari Excel.`,
+                        });
+                    } catch (logError) {
+                        console.warn('Failed to log activity:', logError);
+                    }
+                    
+                    addActivity({ 
+                        type: 'CREATE', 
+                        category: 'Perusahaan', 
+                        text: `${successCount} perusahaan diimpor dari Excel.` 
+                    });
+                }
+                
+                if (errorCount > 0) {
+                    toast(`${errorCount} baris gagal diimpor. Periksa format data.`);
+                }
+                
+                if (successCount === 0 && errorCount === 0) {
+                    toast('Tidak ada data valid yang ditemukan di file.');
+                }
+            } catch (error) {
+                console.error('Import error:', error);
+                toast('Gagal mengimpor file. Periksa format Excel.');
+            } finally {
+                setLoading(false);
+            }
         };
         reader.readAsArrayBuffer(file);
     };
