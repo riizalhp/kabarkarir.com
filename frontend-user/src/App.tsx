@@ -330,9 +330,8 @@ const App: React.FC = () => {
     }
   };
   
-  const onFooterNavigate = (view: 'admin' | 'terms' | 'privacy' | 'help' | 'aboutUs') => {
+  const onFooterNavigate = (view: 'terms' | 'privacy' | 'help' | 'aboutUs') => {
     const routes = {
-      admin: 'https://admin.kabarkarir.com', // Link to separate admin frontend
       terms: '/syarat-ketentuan',
       privacy: '/kebijakan-privasi',
       help: '/bantuan',

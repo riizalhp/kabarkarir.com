@@ -1,7 +1,7 @@
 import React from 'react';
 
 interface FooterProps {
-    onNavigate: (view: 'admin' | 'terms' | 'privacy' | 'help' | 'aboutUs') => void;
+    onNavigate: (view: 'terms' | 'privacy' | 'help' | 'aboutUs') => void;
 }
 
 const Footer: React.FC<FooterProps> = ({ onNavigate }) => {
@@ -22,7 +22,7 @@ const Footer: React.FC<FooterProps> = ({ onNavigate }) => {
     { name: 'Kontak', view: null },
   ];
   
-  const handleNavClick = (e: React.MouseEvent, view: 'admin' | 'terms' | 'privacy' | 'help' | 'aboutUs') => {
+  const handleNavClick = (e: React.MouseEvent, view: 'terms' | 'privacy' | 'help' | 'aboutUs') => {
     e.preventDefault();
     onNavigate(view);
   };
@@ -99,7 +99,6 @@ const Footer: React.FC<FooterProps> = ({ onNavigate }) => {
             <a href="#" onClick={(e) => handleNavClick(e, 'terms')} className="text-gray-300 hover:text-primary transition-colors">Syarat & Ketentuan</a>
             <a href="#" onClick={(e) => handleNavClick(e, 'privacy')} className="text-gray-300 hover:text-primary transition-colors">Kebijakan Privasi</a>
             <a href="#" onClick={(e) => handleNavClick(e, 'help')} className="text-gray-300 hover:text-primary transition-colors">Bantuan</a>
-            <a href="#" onClick={(e) => handleNavClick(e, 'admin')} className="text-gray-300 hover:text-primary transition-colors">Admin</a>
           </div>
         </div>
       </div>

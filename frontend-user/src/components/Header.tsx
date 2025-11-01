@@ -3,7 +3,7 @@ import { NAV_LINKS } from '../constants';
 import { NavLink } from '../types';
 
 interface HeaderProps {
-  onNavigate: (view: 'home' | 'blog' | 'jobCategory' | 'companyList' | 'misiCuan' | 'konsulKarir' | 'bangunCv' | 'pasangIklan' | 'joinTelegram' | 'konsulKarirOnGoing' | 'bangunCvOnGoing' | 'pasangIklanOnGoing' | 'eventRecruitment' | 'favorites' | 'admin' | 'pelatihan' | 'psikotest', category?: string) => void;
+  onNavigate: (view: 'home' | 'blog' | 'jobCategory' | 'companyList' | 'misiCuan' | 'konsulKarir' | 'bangunCv' | 'pasangIklan' | 'joinTelegram' | 'konsulKarirOnGoing' | 'bangunCvOnGoing' | 'pasangIklanOnGoing' | 'eventRecruitment' | 'favorites' | 'pelatihan' | 'psikotest', category?: string) => void;
 }
 
 const Header: React.FC<HeaderProps> = ({ onNavigate }) => {
@@ -27,7 +27,7 @@ const Header: React.FC<HeaderProps> = ({ onNavigate }) => {
     }
   };
   
- const handleNavClick = (e: React.MouseEvent, view: 'home' | 'blog' | 'jobCategory' | 'companyList' | 'misiCuan' | 'konsulKarir' | 'bangunCv' | 'pasangIklan' | 'joinTelegram' | 'konsulKarirOnGoing' | 'bangunCvOnGoing' | 'pasangIklanOnGoing' | 'eventRecruitment' | 'favorites' | 'admin' | 'pelatihan' | 'psikotest', data?: string) => {
+ const handleNavClick = (e: React.MouseEvent, view: 'home' | 'blog' | 'jobCategory' | 'companyList' | 'misiCuan' | 'konsulKarir' | 'bangunCv' | 'pasangIklan' | 'joinTelegram' | 'konsulKarirOnGoing' | 'bangunCvOnGoing' | 'pasangIklanOnGoing' | 'eventRecruitment' | 'favorites' | 'pelatihan' | 'psikotest', data?: string) => {
     e.preventDefault();
     onNavigate(view, data);
     if (isMenuOpen) {
@@ -38,7 +38,7 @@ const Header: React.FC<HeaderProps> = ({ onNavigate }) => {
   const NavItem: React.FC<{ link: NavLink; className?: string }> = ({ link, className }) => {
     const categoryLinks = ['MT/ODP', 'BUMN', 'Fresh Grad', 'Intern'];
     
-    let view: 'home' | 'blog' | 'jobCategory' | 'companyList' | 'misiCuan' | 'konsulKarir' | 'bangunCv' | 'pasangIklan' | 'joinTelegram' | 'konsulKarirOnGoing' | 'bangunCvOnGoing' | 'pasangIklanOnGoing' | 'eventRecruitment' | 'favorites' | 'admin' | 'pelatihan' | 'psikotest' = 'jobCategory';
+    let view: 'home' | 'blog' | 'jobCategory' | 'companyList' | 'misiCuan' | 'konsulKarir' | 'bangunCv' | 'pasangIklan' | 'joinTelegram' | 'konsulKarirOnGoing' | 'bangunCvOnGoing' | 'pasangIklanOnGoing' | 'eventRecruitment' | 'favorites' | 'pelatihan' | 'psikotest' = 'jobCategory';
     let data: string | undefined = undefined;
 
     const linkNameLower = link.name.toLowerCase();
