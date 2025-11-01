@@ -115,11 +115,16 @@ const AdminCompanies: React.FC<AdminCompaniesProps> = ({ companies, setCompanies
                 const updated = await adminCompaniesService.update(currentCompany.id, updateData);
                 setCompanies(prevCompanies => prevCompanies.map(c => c.id === currentCompany.id ? updated : c));
                 
-                await activityLogsService.create({
-                    type: 'UPDATE',
-                    category: 'Perusahaan',
-                    text: `Data perusahaan "${currentCompany.name}" diperbarui.`,
-                });
+                // Try to log activity, but don't fail if RLS blocks it
+                try {
+                    await activityLogsService.create({
+                        type: 'UPDATE',
+                        category: 'Perusahaan',
+                        text: `Data perusahaan "${currentCompany.name}" diperbarui.`,
+                    });
+                } catch (logError) {
+                    console.warn('Failed to log activity (RLS policy):', logError);
+                }
                 
                 addActivity({ type: 'UPDATE', category: 'Perusahaan', text: `Data perusahaan "${currentCompany.name}" diperbarui.` });
                 toast('Perusahaan berhasil diperbarui');
@@ -135,11 +140,16 @@ const AdminCompanies: React.FC<AdminCompaniesProps> = ({ companies, setCompanies
                 
                 setCompanies(prevCompanies => [newCompany, ...prevCompanies]);
                 
-                await activityLogsService.create({
-                    type: 'CREATE',
-                    category: 'Perusahaan',
-                    text: `Perusahaan baru ditambahkan: "${newCompany.name}".`,
-                });
+                // Try to log activity, but don't fail if RLS blocks it
+                try {
+                    await activityLogsService.create({
+                        type: 'CREATE',
+                        category: 'Perusahaan',
+                        text: `Perusahaan baru ditambahkan: "${newCompany.name}".`,
+                    });
+                } catch (logError) {
+                    console.warn('Failed to log activity (RLS policy):', logError);
+                }
                 
                 addActivity({ type: 'CREATE', category: 'Perusahaan', text: `Perusahaan baru ditambahkan: "${newCompany.name}".` });
                 toast('Perusahaan berhasil ditambahkan');
