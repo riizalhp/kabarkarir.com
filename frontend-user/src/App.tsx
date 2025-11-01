@@ -343,18 +343,6 @@ const App: React.FC = () => {
 
   const breadcrumbs = generateBreadcrumbs();
 
-  // Show loading state while fetching data
-  if (loading) {
-    return (
-      <div className="bg-gray-50 font-poppins min-h-screen flex items-center justify-center">
-        <div className="text-center">
-          <div className="inline-block animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mb-4"></div>
-          <p className="text-gray-600">Memuat data...</p>
-        </div>
-      </div>
-    );
-  }
-
   return (
     <div className="bg-gray-50 font-poppins">
       <Header onNavigate={handleNavigation} />
@@ -366,6 +354,17 @@ const App: React.FC = () => {
             </div>
           </div>
         )}
+        {
+          loading &&
+          (
+            <div className="bg-gray-50 font-poppins min-h-screen flex items-center justify-center">
+              <div className="text-center">
+                <div className="inline-block animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mb-4"></div>
+                <p className="text-gray-600">Memuat data...</p>
+              </div>
+            </div>
+          )
+        }
         <AppRoutes 
           jobs={jobs}
           blogPosts={blogPosts}

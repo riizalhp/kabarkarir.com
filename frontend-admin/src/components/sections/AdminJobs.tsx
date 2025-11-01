@@ -352,9 +352,32 @@ const AdminJobs: React.FC<AdminJobsProps> = ({ jobs, setJobs, allCompanies, allM
         const columns = [
             "Judul Posisi", "Nama Perusahaan", "Lokasi", "Provinsi", "Kota", 
             "Tipe Pekerjaan", "Kategori", "Deskripsi", "Pendidikan", "Pengalaman",
-            "Kualifikasi", "Benefit", "Cara Melamar", "Tags", "Jurusan"
+            "Kualifikasi", "Benefit", "Cara Melamar", "Tentang Perusahaan", 
+            "Tags", "Jurusan", "URL Video", "URL PDF", "Rentang Gaji", "Tanggal Berakhir"
         ];
-        downloadExcelTemplate(columns, 'Template_Import_Lowongan');
+        const exampleData = [
+            "Staff Marketing Digital",
+            "PT Maju Jaya",
+            "Jakarta",
+            "DKI Jakarta",
+            "Jakarta Selatan",
+            "Full Time",
+            "Swasta",
+            "Bertanggung jawab dalam mengelola media sosial dan kampanye digital marketing",
+            "S1",
+            "1-2 Tahun",
+            "Menguasai social media marketing|Pengalaman menggunakan Google Ads|Kreatif dan inovatif",
+            "Gaji kompetitif|Asuransi kesehatan|Bonus kinerja",
+            "Kirim CV dan portofolio ke recruitment@majujaya.com",
+            "PT Maju Jaya adalah perusahaan yang bergerak di bidang teknologi digital",
+            "Marketing|Digital|Full Time",
+            "Manajemen|Komunikasi|Desain Grafis",
+            "https://www.youtube.com/embed/xxxxx",
+            "https://drive.google.com/file/d/xxxxx/preview",
+            "Rp 5.000.000 - Rp 8.000.000",
+            "2025-12-31"
+        ];
+        downloadExcelTemplate(columns, 'Template_Import_Lowongan', exampleData);
     };
     
     const filteredJobs = useMemo(() => {
@@ -596,6 +619,15 @@ const AdminJobs: React.FC<AdminJobsProps> = ({ jobs, setJobs, allCompanies, allM
                                         <option>Pendidikan</option>
                                         <option>Kesehatan</option>
                                     </select>
+                                </div>
+                                <div>
+                                    <label className="block text-sm font-medium text-slate-700">Rentang Gaji</label>
+                                    <input type="text" name="salaryRange" value={currentJob.salaryRange || ''} onChange={handleInputChange} className="mt-1 block w-full px-3 py-2 border border-slate-300 rounded-md" placeholder="Contoh: Rp 5.000.000 - Rp 8.000.000" />
+                                </div>
+                                <div>
+                                    <label className="block text-sm font-medium text-slate-700">Tanggal Berakhir Lowongan</label>
+                                    <input type="date" name="dueDate" value={currentJob.dueDate || ''} onChange={handleInputChange} className="mt-1 block w-full px-3 py-2 border border-slate-300 rounded-md" />
+                                    <p className="text-xs text-slate-500 mt-1">Lowongan akan otomatis terhapus setelah tanggal ini</p>
                                 </div>
                             </div>
                             <div className="flex justify-end space-x-3 pt-4 border-t mt-6">

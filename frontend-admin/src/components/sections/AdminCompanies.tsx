@@ -202,7 +202,17 @@ const AdminCompanies: React.FC<AdminCompaniesProps> = ({ companies, setCompanies
         input.onchange = handleFileImport; input.click();
     };
 
-    const handleDownloadTemplate = () => downloadExcelTemplate(["Nama Perusahaan", "Tipe", "Deskripsi"], 'Template_Import_Perusahaan');
+    const handleDownloadTemplate = () => {
+        const columns = ["Nama Perusahaan", "Tipe", "URL Logo", "Website Resmi", "Deskripsi"];
+        const exampleData = [
+            "PT Teknologi Nusantara",
+            "SWASTA",
+            "https://picsum.photos/seed/company1/200/200",
+            "https://www.teknologinusantara.com",
+            "Perusahaan teknologi yang berfokus pada pengembangan aplikasi mobile dan web dengan pengalaman lebih dari 10 tahun melayani berbagai industri"
+        ];
+        downloadExcelTemplate(columns, 'Template_Import_Perusahaan', exampleData);
+    };
 
     const handleSelectCompany = (company: CompanyProfile) => {
         setSelectedCompany(company);
@@ -407,6 +417,7 @@ const AdminCompanies: React.FC<AdminCompaniesProps> = ({ companies, setCompanies
                             <div><label>Nama</label><input type="text" name="name" value={currentCompany.name} onChange={handleInputChange} className="mt-1 block w-full px-3 py-2 border rounded-md" required /></div>
                             <div><label>URL Logo</label><input type="text" name="logo" value={currentCompany.logo} onChange={handleInputChange} className="mt-1 block w-full px-3 py-2 border rounded-md" /></div>
                             <div><label>Tipe</label><select name="type" value={currentCompany.type} onChange={handleInputChange} className="mt-1 block w-full px-3 py-2 border rounded-md"><option>BUMN</option><option>SWASTA</option><option>INSTANSI</option></select></div>
+                            <div><label>Website Resmi</label><input type="url" name="website" value={currentCompany.website || ''} onChange={handleInputChange} className="mt-1 block w-full px-3 py-2 border rounded-md" placeholder="https://www.perusahaan.com" /></div>
                             <div><label>Deskripsi</label><textarea name="description" value={currentCompany.description} onChange={handleInputChange} rows={3} className="mt-1 block w-full px-3 py-2 border rounded-md" /></div>
                             <div className="flex justify-end space-x-3 pt-4 border-t mt-6">
                                 <button type="button" onClick={handleCloseModal} className="bg-slate-200 px-4 py-2 rounded-lg" disabled={loading}>Batal</button>
@@ -438,6 +449,8 @@ const AdminCompanies: React.FC<AdminCompaniesProps> = ({ companies, setCompanies
                                 <input type="text" name="experience" value={currentJob.experience} onChange={handleJobInputChange} placeholder="Pengalaman" className="px-3 py-2 border rounded-md" required />
                                 <select name="type" value={currentJob.type} onChange={handleJobInputChange} className="px-3 py-2 border rounded-md"><option>Full Time</option><option>Part Time</option><option>Internship</option><option>Contract</option></select>
                                 <select name="education" value={currentJob.education} onChange={handleJobInputChange} className="px-3 py-2 border rounded-md"><option>SMA/SMK</option><option>Diploma III</option><option>Strata 1</option><option>Strata 2</option></select>
+                                <input type="text" name="salaryRange" value={currentJob.salaryRange || ''} onChange={handleJobInputChange} placeholder="Rentang Gaji" className="px-3 py-2 border rounded-md" />
+                                <input type="date" name="dueDate" value={currentJob.dueDate || ''} onChange={handleJobInputChange} placeholder="Tanggal Berakhir" className="px-3 py-2 border rounded-md" title="Tanggal berakhir lowongan" />
                             </div>
                             <div className="flex justify-end space-x-3 pt-4 border-t mt-6">
                                 <button type="button" onClick={handleCloseJobModal} className="bg-slate-200 px-4 py-2 rounded-lg" disabled={loading}>Batal</button>

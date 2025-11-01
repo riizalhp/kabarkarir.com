@@ -1,4 +1,5 @@
 import * as React from 'react';
+import { useNavigate, useLocation } from 'react-router-dom';
 import AdminDashboard from './sections/AdminDashboard';
 import AdminJobs from './sections/AdminJobs';
 import AdminCompanies from './sections/AdminCompanies';
@@ -68,6 +69,38 @@ const NavItem: React.FC<{
   );
 };
 
+// Mapping URL paths to section names
+const urlToSection: Record<string, AdminSection> = {
+  '/admin': 'dashboard',
+  '/admin/lowongan': 'jobs',
+  '/admin/perusahaan': 'companies',
+  '/admin/jurusan': 'majors',
+  '/admin/tags': 'tags',
+  '/admin/artikel': 'articles',
+  '/admin/event': 'events',
+  '/admin/misi': 'misi',
+  '/admin/pelatihan': 'pelatihan',
+  '/admin/analytics': 'analytics',
+  '/admin/pengguna': 'users',
+  '/admin/pengaturan': 'settings',
+};
+
+// Mapping section names to URL paths
+const sectionToUrl: Record<AdminSection, string> = {
+  'dashboard': '/admin',
+  'jobs': '/admin/lowongan',
+  'companies': '/admin/perusahaan',
+  'majors': '/admin/jurusan',
+  'tags': '/admin/tags',
+  'articles': '/admin/artikel',
+  'events': '/admin/event',
+  'misi': '/admin/misi',
+  'pelatihan': '/admin/pelatihan',
+  'analytics': '/admin/analytics',
+  'users': '/admin/pengguna',
+  'settings': '/admin/pengaturan',
+};
+
 const AdminPage: React.FC<AdminPageProps> = (props) => {
   const {
     onNavigateHome,
@@ -86,9 +119,29 @@ const AdminPage: React.FC<AdminPageProps> = (props) => {
     addActivity,
   } = props;
 
-  const [section, setSection] = React.useState<AdminSection>('dashboard');
+  const navigate = useNavigate();
+  const location = useLocation();
+  
+  // Determine current section from URL
+  const getCurrentSection = (): AdminSection => {
+    return urlToSection[location.pathname] || 'dashboard';
+  };
+
+  const [section, setSection] = React.useState<AdminSection>(getCurrentSection());
   const [users, setUsers] = React.useState<AdminUser[]>(INITIAL_ADMIN_USERS);
   const [previewData, setPreviewData] = React.useState<{ type: PreviewableItem; data: any } | null>(null);
+
+  // Sync section with URL on mount and URL change
+  React.useEffect(() => {
+    const currentSection = getCurrentSection();
+    setSection(currentSection);
+  }, [location.pathname]);
+
+  // Navigate to URL when section changes
+  const handleSetSection = (newSection: AdminSection) => {
+    setSection(newSection);
+    navigate(sectionToUrl[newSection]);
+  };
 
   const handleShowPreview = (type: PreviewableItem, data: any) => {
     setPreviewData({ type, data });
@@ -180,7 +233,7 @@ const AdminPage: React.FC<AdminPageProps> = (props) => {
         </div>
         <nav className="flex-1 p-2 space-y-1 overflow-y-auto overflow-x-hidden scrollbar-thin scrollbar-thumb-slate-600 scrollbar-track-slate-800">
           {navItems.map(item => (
-            <NavItem key={item.sectionName} {...item} currentSection={section} setSection={setSection} />
+            <NavItem key={item.sectionName} {...item} currentSection={section} setSection={handleSetSection} />
           ))}
         </nav>
         <div className="p-2 border-t border-slate-700 shrink-0 space-y-1">

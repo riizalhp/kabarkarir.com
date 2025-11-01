@@ -21,6 +21,7 @@ export interface CompanyProfile {
   description: string;
   jobsAvailable: number;
   type: 'BUMN' | 'SWASTA' | 'INSTANSI';
+  website?: string;
 }
 
 export interface Job {
@@ -47,6 +48,8 @@ export interface Job {
   majors?: string[];
   pdfEmbedUrl?: string;
   videoEmbedUrl?: string;
+  dueDate?: string;
+  salaryRange?: string;
 }
 
 export interface Company {

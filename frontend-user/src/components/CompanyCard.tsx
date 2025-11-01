@@ -22,9 +22,11 @@ const CompanyCard: React.FC<CompanyCardProps> = ({ company, onSelectCompany }) =
         </div>
       </div>
       <p className="text-sm text-gray-600 text-truncate-2 flex-grow">{company.description}</p>
-      <button className="w-full mt-auto bg-primary/10 text-primary font-medium py-2 px-4 rounded-lg hover:bg-primary hover:text-white transition text-sm">
-        Lihat Lowongan
-      </button>
+      <div className="w-full mt-auto text-right">
+        <span className="text-primary font-medium hover:text-blue-700 cursor-pointer transition text-sm inline-flex items-center">
+          Lihat Detail <i className="fas fa-arrow-right ml-2"></i>
+        </span>
+      </div>
     </div>
   );
 };

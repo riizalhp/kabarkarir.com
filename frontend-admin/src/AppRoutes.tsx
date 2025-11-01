@@ -1,30 +1,21 @@
 import React from 'react';
 import { Routes, Route, Navigate } from 'react-router-dom';
 import LoginPage from './components/LoginPage';
-import AdminPage from './components/AdminPage';
-import { Job, BlogPost, MisiCuanOffer, CompanyProfile, RecruitmentEvent, PelatihanInfo, Major, MisiSubmission, Tag, Activity } from './types';
+import DashboardPage from './components/DashboardPage';
+import JobsPage from './components/JobsPage';
+import CompaniesPage from './components/CompaniesPage';
+import MajorsPage from './components/MajorsPage';
+import TagsPage from './components/TagsPage';
+import ArticlesPage from './components/ArticlesPage';
+import EventsPage from './components/EventsPage';
+import MisiPage from './components/MisiPage';
+import PelatihanPage from './components/PelatihanPage';
+import AnalyticsPage from './components/AnalyticsPage';
+import UsersPage from './components/UsersPage';
+import SettingsPage from './components/SettingsPage';
+import { activityLogsService } from './services/adminApi';
 
 interface AppRoutesProps {
-  jobs: Job[];
-  setJobs: React.Dispatch<React.SetStateAction<Job[]>>;
-  blogPosts: BlogPost[];
-  setBlogPosts: React.Dispatch<React.SetStateAction<BlogPost[]>>;
-  misiOffers: MisiCuanOffer[];
-  setMisiOffers: React.Dispatch<React.SetStateAction<MisiCuanOffer[]>>;
-  misiSubmissions: MisiSubmission[];
-  setMisiSubmissions: React.Dispatch<React.SetStateAction<MisiSubmission[]>>;
-  companies: CompanyProfile[];
-  setCompanies: React.Dispatch<React.SetStateAction<CompanyProfile[]>>;
-  events: RecruitmentEvent[];
-  setEvents: React.Dispatch<React.SetStateAction<RecruitmentEvent[]>>;
-  courses: PelatihanInfo[];
-  setCourses: React.Dispatch<React.SetStateAction<PelatihanInfo[]>>;
-  majors: Major[];
-  setMajors: React.Dispatch<React.SetStateAction<Major[]>>;
-  tags: Tag[];
-  setTags: React.Dispatch<React.SetStateAction<Tag[]>>;
-  recentActivities: Activity[];
-  addActivity: (activity: Omit<Activity, 'id' | 'timestamp'>) => void;
   isLoggedIn: boolean;
   setIsLoggedIn: (loggedIn: boolean, user?: any) => void;
   currentUser: any;
@@ -32,40 +23,22 @@ interface AppRoutesProps {
 }
 
 const AppRoutes: React.FC<AppRoutesProps> = ({
-  jobs,
-  setJobs,
-  blogPosts,
-  setBlogPosts,
-  misiOffers,
-  setMisiOffers,
-  misiSubmissions,
-  setMisiSubmissions,
-  companies,
-  setCompanies,
-  events,
-  setEvents,
-  courses,
-  setCourses,
-  majors,
-  setMajors,
-  tags,
-  setTags,
-  recentActivities,
-  addActivity,
   isLoggedIn,
   setIsLoggedIn,
-  currentUser,
   onLogout,
 }) => {
   
-  // Calculate companies with job count
-  const companiesWithJobCount = companies.map(company => {
-    const jobsAvailable = jobs.filter(job => job.companySlug === company.slug).length;
-    return {
-      ...company,
-      jobsAvailable
-    };
-  });
+  const handleNavigateHome = () => {
+    window.location.href = 'https://kabarkarir.com';
+  };
+
+  const handleAddActivity = async (activity: { type: 'CREATE' | 'UPDATE' | 'DELETE'; category: string; text: string }) => {
+    try {
+      await activityLogsService.create(activity);
+    } catch (error) {
+      console.error('Error adding activity log:', error);
+    }
+  };
 
   return (
     <Routes>
@@ -81,36 +54,111 @@ const AppRoutes: React.FC<AppRoutesProps> = ({
         } 
       />
       
-      {/* Admin Dashboard Route */}
+      {/* Admin Routes */}
       <Route 
         path="/admin" 
         element={
           isLoggedIn ? 
-          <AdminPage 
-            onNavigateHome={() => window.location.href = 'https://kabarkarir.com'}
-            onLogout={onLogout}
-            jobs={jobs} 
-            setJobs={setJobs}
-            companies={companies} 
-            setCompanies={setCompanies}
-            blogPosts={blogPosts} 
-            setBlogPosts={setBlogPosts}
-            events={events} 
-            setEvents={setEvents}
-            misiOffers={misiOffers} 
-            setMisiOffers={setMisiOffers}
-            misiSubmissions={misiSubmissions} 
-            setMisiSubmissions={setMisiSubmissions}
-            courses={courses} 
-            setCourses={setCourses}
-            majors={majors} 
-            setMajors={setMajors}
-            tags={tags} 
-            setTags={setTags}
-            allCompaniesWithCount={companiesWithJobCount}
-            recentActivities={recentActivities}
-            addActivity={addActivity}
-          /> : 
+          <DashboardPage onNavigateHome={handleNavigateHome} onLogout={onLogout} /> : 
+          <Navigate to="/login" replace />
+        } 
+      />
+      
+      <Route 
+        path="/admin/lowongan" 
+        element={
+          isLoggedIn ? 
+          <JobsPage onNavigateHome={handleNavigateHome} onLogout={onLogout} addActivity={handleAddActivity} /> : 
+          <Navigate to="/login" replace />
+        } 
+      />
+      
+      <Route 
+        path="/admin/perusahaan" 
+        element={
+          isLoggedIn ? 
+          <CompaniesPage onNavigateHome={handleNavigateHome} onLogout={onLogout} addActivity={handleAddActivity} /> : 
+          <Navigate to="/login" replace />
+        } 
+      />
+      
+      <Route 
+        path="/admin/jurusan" 
+        element={
+          isLoggedIn ? 
+          <MajorsPage onNavigateHome={handleNavigateHome} onLogout={onLogout} /> : 
+          <Navigate to="/login" replace />
+        } 
+      />
+      
+      <Route 
+        path="/admin/tags" 
+        element={
+          isLoggedIn ? 
+          <TagsPage onNavigateHome={handleNavigateHome} onLogout={onLogout} /> : 
+          <Navigate to="/login" replace />
+        } 
+      />
+      
+      <Route 
+        path="/admin/artikel" 
+        element={
+          isLoggedIn ? 
+          <ArticlesPage onNavigateHome={handleNavigateHome} onLogout={onLogout} addActivity={handleAddActivity} /> : 
+          <Navigate to="/login" replace />
+        } 
+      />
+      
+      <Route 
+        path="/admin/event" 
+        element={
+          isLoggedIn ? 
+          <EventsPage onNavigateHome={handleNavigateHome} onLogout={onLogout} /> : 
+          <Navigate to="/login" replace />
+        } 
+      />
+      
+      <Route 
+        path="/admin/misi" 
+        element={
+          isLoggedIn ? 
+          <MisiPage onNavigateHome={handleNavigateHome} onLogout={onLogout} /> : 
+          <Navigate to="/login" replace />
+        } 
+      />
+      
+      <Route 
+        path="/admin/pelatihan" 
+        element={
+          isLoggedIn ? 
+          <PelatihanPage onNavigateHome={handleNavigateHome} onLogout={onLogout} /> : 
+          <Navigate to="/login" replace />
+        } 
+      />
+      
+      <Route 
+        path="/admin/analytics" 
+        element={
+          isLoggedIn ? 
+          <AnalyticsPage onNavigateHome={handleNavigateHome} onLogout={onLogout} /> : 
+          <Navigate to="/login" replace />
+        } 
+      />
+      
+      <Route 
+        path="/admin/pengguna" 
+        element={
+          isLoggedIn ? 
+          <UsersPage onNavigateHome={handleNavigateHome} onLogout={onLogout} /> : 
+          <Navigate to="/login" replace />
+        } 
+      />
+      
+      <Route 
+        path="/admin/pengaturan" 
+        element={
+          isLoggedIn ? 
+          <SettingsPage onNavigateHome={handleNavigateHome} onLogout={onLogout} /> : 
           <Navigate to="/login" replace />
         } 
       />
@@ -128,3 +176,4 @@ const AppRoutes: React.FC<AppRoutesProps> = ({
 };
 
 export default AppRoutes;
+

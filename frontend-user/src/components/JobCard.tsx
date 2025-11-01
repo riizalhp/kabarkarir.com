@@ -79,11 +79,13 @@ const JobCard: React.FC<JobCardProps> = ({ job, onSelectJob, onSelectCategory, o
         <div className="flex items-center flex-wrap text-xs text-gray-500 mt-3 gap-x-3 gap-y-1">
           <span className="flex items-center"><i className="fas fa-map-marker-alt mr-1"></i> {job.location}</span>
           <span className="flex items-center"><i className="fas fa-briefcase mr-1"></i> {job.type}</span>
+          {job.salaryRange && <span className="flex items-center"><i className="fas fa-money-bill-wave mr-1"></i> {job.salaryRange}</span>}
           <button onClick={handleCategoryClick} className={`text-xs font-medium px-2 py-1 rounded-full ${badgeColorClasses[job.categoryColor]} hover:opacity-80 transition`}>{job.category}</button>
         </div>
         <p className="text-sm text-gray-600 mt-3 text-truncate-2">{job.description}</p>
-        <div className="mt-4">
-          <span className="text-xs text-gray-500">Diposting {job.posted}</span>
+        <div className="mt-4 flex items-center justify-between text-xs text-gray-500">
+          <span>Diposting {job.posted}</span>
+          {job.dueDate && <span className="text-red-600"><i className="far fa-clock mr-1"></i>Berakhir {job.dueDate}</span>}
         </div>
       </div>
       <div className="bg-gray-50 p-3 flex items-center justify-between">

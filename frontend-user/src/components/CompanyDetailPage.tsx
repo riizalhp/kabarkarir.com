@@ -148,6 +148,20 @@ const CompanyDetailPage: React.FC<CompanyDetailPageProps> = ({ companySlug, comp
                 <div className="bg-white p-6 rounded-lg shadow-md mb-8">
                     <h2 className="text-xl font-bold text-secondary border-b pb-3 mb-4">Tentang Perusahaan</h2>
                     <p className="text-gray-700 leading-relaxed">{company.description}</p>
+                    {company.website && (
+                        <div className="mt-4 pt-4 border-t">
+                            <a 
+                                href={company.website} 
+                                target="_blank" 
+                                rel="noopener noreferrer" 
+                                className="inline-flex items-center text-primary hover:text-blue-700 font-medium transition-colors"
+                            >
+                                <i className="fas fa-globe mr-2"></i>
+                                Kunjungi Website Resmi
+                                <i className="fas fa-external-link-alt ml-2 text-sm"></i>
+                            </a>
+                        </div>
+                    )}
                 </div>
                 
                 {/* Job Listings */}

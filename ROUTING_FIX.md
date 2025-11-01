@@ -6,6 +6,7 @@
 ## 🐛 Masalah yang Ditemukan
 
 Tiga halaman layanan tidak dapat diakses melalui URL `/ongoing`:
+
 - `/konsul-karir/ongoing`
 - `/bangun-cv/ongoing`
 - `/pasang-iklan/ongoing`
@@ -13,7 +14,9 @@ Tiga halaman layanan tidak dapat diakses melalui URL `/ongoing`:
 ## 🔍 Root Cause Analysis
 
 ### Masalah di `Header.tsx`
+
 Header mengirimkan view dengan suffix "OnGoing":
+
 ```tsx
 // Di Header.tsx (Baris 45-51)
 } else if (linkNameLower === 'konsul karir') {
@@ -26,7 +29,9 @@ Header mengirimkan view dengan suffix "OnGoing":
 ```
 
 ### Masalah di `App.tsx`
+
 Handler untuk view "OnGoing" **TIDAK ADA** di fungsi `handleNavigation()`:
+
 ```tsx
 // ❌ SEBELUM PERBAIKAN - Handler tidak ada
 case 'konsulKarir':
@@ -36,6 +41,7 @@ case 'konsulKarir':
 ```
 
 ### Dampak
+
 1. User klik "Konsul Karir" → Tidak terjadi navigasi atau redirect ke home
 2. URL `/konsul-karir/ongoing` tidak pernah dikunjungi
 3. Komponen `KosulKarirOnGoing`, `BangunCVOnGoing`, `PasangIklanOnGoing` tidak bisa diakses
@@ -51,26 +57,26 @@ Menambahkan 3 handler baru di fungsi `handleNavigation()`:
 const handleNavigation = (view: string, category?: string) => {
   switch (view) {
     // ... existing cases ...
-    
-    case 'konsulKarir':
-      window.location.href = '/konsul-karir';
+
+    case "konsulKarir":
+      window.location.href = "/konsul-karir";
       break;
-    case 'konsulKarirOnGoing':          // ✅ BARU
-      window.location.href = '/konsul-karir/ongoing';
+    case "konsulKarirOnGoing": // ✅ BARU
+      window.location.href = "/konsul-karir/ongoing";
       break;
-    case 'bangunCv':
-      window.location.href = '/bangun-cv';
+    case "bangunCv":
+      window.location.href = "/bangun-cv";
       break;
-    case 'bangunCvOnGoing':             // ✅ BARU
-      window.location.href = '/bangun-cv/ongoing';
+    case "bangunCvOnGoing": // ✅ BARU
+      window.location.href = "/bangun-cv/ongoing";
       break;
-    case 'pasangIklan':
-      window.location.href = '/pasang-iklan';
+    case "pasangIklan":
+      window.location.href = "/pasang-iklan";
       break;
-    case 'pasangIklanOnGoing':          // ✅ BARU
-      window.location.href = '/pasang-iklan/ongoing';
+    case "pasangIklanOnGoing": // ✅ BARU
+      window.location.href = "/pasang-iklan/ongoing";
       break;
-      
+
     // ... rest of cases ...
   }
 };
@@ -79,6 +85,7 @@ const handleNavigation = (view: string, category?: string) => {
 ## 🎯 Hasil Perbaikan
 
 ### Sebelum Perbaikan
+
 ```
 User Click "Konsul Karir"
     ↓
@@ -90,6 +97,7 @@ Jatuh ke default case → Redirect ke '/' atau tidak terjadi apa-apa
 ```
 
 ### Setelah Perbaikan
+
 ```
 User Click "Konsul Karir"
     ↓
@@ -106,11 +114,11 @@ Render <KosulKarirOnGoing /> component ✅
 
 ## 📝 URL yang Sekarang Berfungsi
 
-| **Halaman** | **URL Utama** | **URL OnGoing** | **Status** |
-|------------|--------------|-----------------|-----------|
-| Konsul Karir | `/konsul-karir` | `/konsul-karir/ongoing` | ✅ Fixed |
-| Bangun CV | `/bangun-cv` | `/bangun-cv/ongoing` | ✅ Fixed |
-| Pasang Iklan | `/pasang-iklan` | `/pasang-iklan/ongoing` | ✅ Fixed |
+| **Halaman**  | **URL Utama**   | **URL OnGoing**         | **Status** |
+| ------------ | --------------- | ----------------------- | ---------- |
+| Konsul Karir | `/konsul-karir` | `/konsul-karir/ongoing` | ✅ Fixed   |
+| Bangun CV    | `/bangun-cv`    | `/bangun-cv/ongoing`    | ✅ Fixed   |
+| Pasang Iklan | `/pasang-iklan` | `/pasang-iklan/ongoing` | ✅ Fixed   |
 
 ## 🧪 Testing Checklist
 
@@ -138,12 +146,14 @@ Render <KosulKarirOnGoing /> component ✅
 ## 🚀 Deployment
 
 Perubahan ini hanya melibatkan 1 file JavaScript/TypeScript, tidak ada perubahan pada:
+
 - Database schema
 - API endpoints
 - Environment variables
 - Build configuration
 
 Langkah deployment:
+
 1. Commit perubahan
 2. Push ke repository
 3. Vercel akan auto-deploy
@@ -161,11 +171,13 @@ Langkah deployment:
 ## 💡 Lesson Learned
 
 **Penyebab Bug:**
+
 - Inkonsistensi penamaan view antara Header dan App
 - Kurangnya handler untuk semua view yang dikirim dari Header
 - Tidak ada error yang muncul karena jatuh ke default case
 
 **Prevention:**
+
 - Buat TypeScript union type untuk view names agar type-safe
 - Implement exhaustive switch case checking
 - Add unit tests untuk routing logic

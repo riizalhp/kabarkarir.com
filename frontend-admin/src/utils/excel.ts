@@ -5,8 +5,9 @@ declare const XLSX: any;
  * Membuat dan mengunduh file template Excel (.xlsx).
  * @param columns - Array string yang akan menjadi header kolom.
  * @param fileName - Nama file yang akan diunduh (tanpa ekstensi .xlsx).
+ * @param exampleData - Array data contoh untuk row kedua (opsional).
  */
-export const downloadExcelTemplate = (columns: string[], fileName:string) => {
+export const downloadExcelTemplate = (columns: string[], fileName: string, exampleData?: string[]) => {
   try {
     // Pastikan library XLSX tersedia
     if (typeof XLSX === 'undefined') {
@@ -15,8 +16,16 @@ export const downloadExcelTemplate = (columns: string[], fileName:string) => {
       return;
     }
 
-    // Buat worksheet hanya dengan baris header
-    const ws = XLSX.utils.aoa_to_sheet([columns]);
+    // Buat data untuk worksheet
+    const worksheetData = [columns];
+    
+    // Tambahkan baris contoh jika ada
+    if (exampleData && exampleData.length > 0) {
+      worksheetData.push(exampleData);
+    }
+    
+    // Buat worksheet dengan header dan contoh data
+    const ws = XLSX.utils.aoa_to_sheet(worksheetData);
     
     // Buat workbook baru
     const wb = XLSX.utils.book_new();

@@ -268,9 +268,28 @@ const AdminEvents: React.FC<AdminEventsProps> = ({ events, setEvents, allCompani
     const handleDownloadTemplate = () => {
         const columns = [
             "Judul Event", "Penyelenggara", "Tanggal", "Waktu", 
-            "Lokasi", "Provinsi", "Kota", "Tipe", "Deskripsi"
+            "Lokasi", "Provinsi", "Kota", "Tipe", "Deskripsi",
+            "URL Gambar", "Posisi Dibuka", "URL Map Direction", 
+            "URL Map Embed", "URL Video", "URL PDF"
         ];
-        downloadExcelTemplate(columns, 'Template_Import_Event');
+        const exampleData = [
+            "Job Fair Tech 2025",
+            "Universitas Indonesia",
+            "2025-12-15",
+            "09:00 - 17:00 WIB",
+            "Balai Kartini, Jakarta",
+            "DKI Jakarta",
+            "Jakarta Pusat",
+            "Job Fair",
+            "Job fair khusus untuk lulusan IT dan teknologi dengan berbagai perusahaan ternama. Acara gratis dan terbuka untuk umum.",
+            "https://picsum.photos/seed/jobfair1/800/400",
+            "Software Engineer|Data Analyst|UI/UX Designer|Project Manager",
+            "https://maps.app.goo.gl/xxxxx",
+            "https://www.google.com/maps/embed?pb=xxxxx",
+            "https://www.youtube.com/embed/xxxxx",
+            "https://drive.google.com/file/d/xxxxx/preview"
+        ];
+        downloadExcelTemplate(columns, 'Template_Import_Event', exampleData);
     };
 
     const filteredCompanies = useMemo(() => {

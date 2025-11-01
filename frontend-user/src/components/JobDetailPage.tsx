@@ -233,6 +233,8 @@ const JobDetailPage: React.FC<JobDetailPageProps> = ({ job, allJobs, onBack, onS
                   <div className="flex items-center flex-wrap text-sm text-gray-500 mt-2 gap-x-4 gap-y-1">
                     <span className="flex items-center"><i className="fas fa-map-marker-alt mr-2"></i> {job.location}</span>
                     <span className="flex items-center"><i className="far fa-clock mr-2"></i> Diposting {job.posted}</span>
+                    {job.salaryRange && <span className="flex items-center"><i className="fas fa-money-bill-wave mr-2"></i> {job.salaryRange}</span>}
+                    {job.dueDate && <span className="flex items-center text-red-600"><i className="far fa-calendar-times mr-2"></i> Berakhir {job.dueDate}</span>}
                   </div>
                 </div>
               </div>

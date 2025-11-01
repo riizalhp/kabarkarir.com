@@ -259,6 +259,17 @@ const AdminMisi: React.FC<AdminMisiProps> = ({ misi, setMisi, submissions, setSu
         downloadExcelTemplate(columns, 'Template_Import_Misi_Cuan');
     };
 
+    // Calculate filtered misi (must be before any conditional returns)
+    const filteredMisi = useMemo(() => {
+        return misi.filter(m => 
+            m.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
+            m.company.toLowerCase().includes(searchTerm.toLowerCase())
+        );
+    }, [misi, searchTerm]);
+
+    const totalMisiPages = Math.ceil(filteredMisi.length / MISI_ITEMS_PER_PAGE);
+    const currentMisiList = filteredMisi.slice((misiPage - 1) * MISI_ITEMS_PER_PAGE, misiPage * MISI_ITEMS_PER_PAGE);
+
     // Loading state UI
     if (dataLoading) {
         return (
@@ -379,16 +390,6 @@ const AdminMisi: React.FC<AdminMisiProps> = ({ misi, setMisi, submissions, setSu
         );
     }
     
-    const filteredMisi = useMemo(() => {
-        return misi.filter(m => 
-            m.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
-            m.company.toLowerCase().includes(searchTerm.toLowerCase())
-        );
-    }, [misi, searchTerm]);
-
-    const totalMisiPages = Math.ceil(filteredMisi.length / MISI_ITEMS_PER_PAGE);
-    const currentMisiList = filteredMisi.slice((misiPage - 1) * MISI_ITEMS_PER_PAGE, misiPage * MISI_ITEMS_PER_PAGE);
-
 
     return (
         <div className="bg-white p-6 rounded-lg shadow-md">
