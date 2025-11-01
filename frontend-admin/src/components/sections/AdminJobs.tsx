@@ -3,6 +3,7 @@ import { Job, CompanyProfile, Major, Tag, Activity } from '../../types';
 import { toast } from '../../utils/toast';
 import { downloadExcelTemplate } from '../../utils/excel';
 import Pagination from '../Pagination';
+import AutoResizeTextarea from '../AutoResizeTextarea';
 import { adminJobsService, activityLogsService } from '../../services/adminApi';
 
 // Beri tahu TypeScript tentang objek XLSX global dari CDN
@@ -508,7 +509,15 @@ const AdminJobs: React.FC<AdminJobsProps> = ({ jobs, setJobs, allCompanies, allM
                             </div>
                             <div>
                                 <label className="block text-sm font-medium text-slate-700">Deskripsi</label>
-                                <textarea name="description" value={currentJob.description} onChange={handleInputChange} rows={3} className="mt-1 block w-full px-3 py-2 border border-slate-300 rounded-md" required />
+                                <AutoResizeTextarea 
+                                    name="description" 
+                                    value={currentJob.description || ''} 
+                                    onChange={handleInputChange} 
+                                    minRows={3}
+                                    maxRows={15}
+                                    className="mt-1 block w-full px-3 py-2 border border-slate-300 rounded-md" 
+                                    required 
+                                />
                             </div>
                              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                                 <div>
@@ -522,24 +531,48 @@ const AdminJobs: React.FC<AdminJobsProps> = ({ jobs, setJobs, allCompanies, allM
                             </div>
                             <div>
                                 <label className="block text-sm font-medium text-slate-700">Kualifikasi</label>
-                                <textarea name="qualifications" value={currentJob.qualifications?.join('\n')} onChange={(e) => setCurrentJob({...currentJob, qualifications: e.target.value.split('\n')})} rows={4} className="mt-1 block w-full px-3 py-2 border border-slate-300 rounded-md" placeholder="Satu kualifikasi per baris" />
+                                <AutoResizeTextarea 
+                                    name="qualifications" 
+                                    value={currentJob.qualifications?.join('\n') || ''} 
+                                    onChange={(e) => setCurrentJob({...currentJob, qualifications: e.target.value.split('\n')})} 
+                                    minRows={4}
+                                    maxRows={15}
+                                    className="mt-1 block w-full px-3 py-2 border border-slate-300 rounded-md" 
+                                    placeholder="Satu kualifikasi per baris" 
+                                />
                             </div>
                              <div>
                                 <label className="block text-sm font-medium text-slate-700">Benefit</label>
-                                <textarea name="benefits" value={currentJob.benefits?.join('\n')} onChange={(e) => setCurrentJob({...currentJob, benefits: e.target.value.split('\n')})} rows={4} className="mt-1 block w-full px-3 py-2 border border-slate-300 rounded-md" placeholder="Satu benefit per baris" />
+                                <AutoResizeTextarea 
+                                    name="benefits" 
+                                    value={currentJob.benefits?.join('\n') || ''} 
+                                    onChange={(e) => setCurrentJob({...currentJob, benefits: e.target.value.split('\n')})} 
+                                    minRows={4}
+                                    maxRows={15}
+                                    className="mt-1 block w-full px-3 py-2 border border-slate-300 rounded-md" 
+                                    placeholder="Satu benefit per baris" 
+                                />
                             </div>
                              <div>
                                 <label className="block text-sm font-medium text-slate-700">Cara Melamar</label>
-                                <textarea name="howToApply" value={currentJob.howToApply} onChange={handleInputChange} rows={3} className="mt-1 block w-full px-3 py-2 border border-slate-300 rounded-md" />
+                                <AutoResizeTextarea 
+                                    name="howToApply" 
+                                    value={currentJob.howToApply || ''} 
+                                    onChange={handleInputChange} 
+                                    minRows={3}
+                                    maxRows={15}
+                                    className="mt-1 block w-full px-3 py-2 border border-slate-300 rounded-md" 
+                                />
                             </div>
                              <div>
                                 <label className="block text-sm font-medium text-slate-700">Tentang Perusahaan (untuk lowongan)</label>
                                 <p className="text-xs text-slate-500 mt-1">Data ini diambil otomatis dari profil perusahaan yang dipilih.</p>
-                                <textarea 
+                                <AutoResizeTextarea 
                                     name="aboutCompany" 
-                                    value={currentJob.aboutCompany} 
+                                    value={currentJob.aboutCompany || ''} 
                                     onChange={handleInputChange} 
-                                    rows={3} 
+                                    minRows={3}
+                                    maxRows={10}
                                     className="mt-1 block w-full px-3 py-2 border border-slate-300 rounded-md bg-slate-100 cursor-not-allowed" 
                                     readOnly 
                                 />

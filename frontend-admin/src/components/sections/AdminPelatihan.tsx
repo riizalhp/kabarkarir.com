@@ -1,6 +1,7 @@
 import React, { useState, useMemo, useEffect, useCallback } from 'react';
 import { PelatihanInfo } from '../../types';
 import Pagination from '../Pagination';
+import AutoResizeTextarea from '../AutoResizeTextarea';
 import RichTextEditor from '../RichTextEditor';
 import PreviewModal from '../PreviewModal';
 import { adminPelatihanService } from '../../services/adminApi';
@@ -257,7 +258,15 @@ const AdminPelatihan: React.FC<AdminPelatihanProps> = ({ courses, setCourses }) 
                             </div>
                              <div>
                                 <label className="block text-sm font-medium text-slate-700">Deskripsi Singkat (untuk kartu)</label>
-                                <textarea name="description" value={currentCourse.description || ''} onChange={handleInputChange} rows={3} className="mt-1 block w-full px-3 py-2 border border-slate-300 rounded-md" required />
+                                <AutoResizeTextarea 
+                                    name="description" 
+                                    value={currentCourse.description || ''} 
+                                    onChange={handleInputChange} 
+                                    minRows={3}
+                                    maxRows={10}
+                                    className="mt-1 block w-full px-3 py-2 border border-slate-300 rounded-md" 
+                                    required 
+                                />
                             </div>
                              <div>
                                 <label className="block text-sm font-medium text-slate-700">Deskripsi Lengkap (untuk halaman detail)</label>

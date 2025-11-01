@@ -3,6 +3,7 @@ import { MisiCuanOffer, SubmissionField, MisiSubmission } from '../../types';
 import { downloadExcelTemplate } from '../../utils/excel';
 import { formatDisplayDate } from '../../utils/formatting';
 import Pagination from '../Pagination';
+import AutoResizeTextarea from '../AutoResizeTextarea';
 import { adminMisiService, activityLogsService } from '../../services/adminApi';
 import { toast } from '../../utils/toast';
 
@@ -491,18 +492,41 @@ const AdminMisi: React.FC<AdminMisiProps> = ({ misi, setMisi, submissions, setSu
                             </div>
                             <div>
                                 <label className="block text-sm font-medium text-slate-700">Deskripsi</label>
-                                <textarea name="description" value={currentMisi.description} onChange={handleInputChange} rows={3} className="mt-1 block w-full px-3 py-2 border border-slate-300 rounded-md" />
+                                <AutoResizeTextarea 
+                                    name="description" 
+                                    value={currentMisi.description || ''} 
+                                    onChange={handleInputChange} 
+                                    minRows={3}
+                                    maxRows={15}
+                                    className="mt-1 block w-full px-3 py-2 border border-slate-300 rounded-md" 
+                                />
                             </div>
                             <div>
                                 <label className="block text-sm font-medium text-slate-700">Langkah-langkah Misi</label>
-                                <textarea name="steps" value={currentMisi.steps || ''} onChange={handleInputChange} rows={4} className="mt-1 block w-full px-3 py-2 border border-slate-300 rounded-md" placeholder="Satu langkah per baris"/>
+                                <AutoResizeTextarea 
+                                    name="steps" 
+                                    value={currentMisi.steps || ''} 
+                                    onChange={handleInputChange} 
+                                    minRows={4}
+                                    maxRows={15}
+                                    className="mt-1 block w-full px-3 py-2 border border-slate-300 rounded-md" 
+                                    placeholder="Satu langkah per baris"
+                                />
                             </div>
                             <div>
                                 <label className="block text-sm font-medium text-slate-700">Form Pengumpulan Kustom</label>
                                 <div className="mt-1 p-3 border border-slate-300 rounded-md space-y-3">
                                     <div>
                                         <label className="block text-xs font-medium text-slate-600">Instruksi Pengumpulan</label>
-                                         <textarea name="submissionRequirement" value={currentMisi.submissionRequirement} onChange={handleInputChange} rows={2} className="mt-1 block w-full px-3 py-2 border border-slate-300 rounded-md" placeholder="Jelaskan apa saja yang harus dikumpulkan pengguna"/>
+                                         <AutoResizeTextarea 
+                                            name="submissionRequirement" 
+                                            value={currentMisi.submissionRequirement || ''} 
+                                            onChange={handleInputChange} 
+                                            minRows={2}
+                                            maxRows={10}
+                                            className="mt-1 block w-full px-3 py-2 border border-slate-300 rounded-md" 
+                                            placeholder="Jelaskan apa saja yang harus dikumpulkan pengguna"
+                                        />
                                     </div>
                                     <label className="block text-xs font-medium text-slate-600">Field Form</label>
                                     {currentMisi.submissionFields?.map((field) => (

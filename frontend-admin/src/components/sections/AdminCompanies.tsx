@@ -3,6 +3,7 @@ import { CompanyProfile, Job, Major, Tag, Activity } from '../../types';
 import { toast } from '../../utils/toast';
 import { downloadExcelTemplate } from '../../utils/excel';
 import Pagination from '../Pagination';
+import AutoResizeTextarea from '../AutoResizeTextarea';
 import { adminCompaniesService, adminJobsService, activityLogsService } from '../../services/adminApi';
 
 // Beri tahu TypeScript tentang objek XLSX global dari CDN
@@ -421,7 +422,17 @@ const AdminCompanies: React.FC<AdminCompaniesProps> = ({ companies, setCompanies
                             <div><label>URL Logo</label><input type="text" name="logo" value={currentCompany.logo} onChange={handleInputChange} className="mt-1 block w-full px-3 py-2 border rounded-md" /></div>
                             <div><label>Tipe</label><select name="type" value={currentCompany.type} onChange={handleInputChange} className="mt-1 block w-full px-3 py-2 border rounded-md"><option>BUMN</option><option>SWASTA</option><option>INSTANSI</option></select></div>
                             <div><label>Website Resmi</label><input type="url" name="website" value={currentCompany.website || ''} onChange={handleInputChange} className="mt-1 block w-full px-3 py-2 border rounded-md" placeholder="https://www.perusahaan.com" /></div>
-                            <div><label>Deskripsi</label><textarea name="description" value={currentCompany.description} onChange={handleInputChange} rows={3} className="mt-1 block w-full px-3 py-2 border rounded-md" /></div>
+                            <div>
+                                <label>Deskripsi</label>
+                                <AutoResizeTextarea 
+                                    name="description" 
+                                    value={currentCompany.description || ''} 
+                                    onChange={handleInputChange} 
+                                    minRows={3}
+                                    maxRows={15}
+                                    className="mt-1 block w-full px-3 py-2 border rounded-md" 
+                                />
+                            </div>
                             <div className="flex justify-end space-x-3 pt-4 border-t mt-6">
                                 <button type="button" onClick={handleCloseModal} className="bg-slate-200 px-4 py-2 rounded-lg" disabled={loading}>Batal</button>
                                 <button type="button" onClick={() => onShowPreview('company', currentCompany)} className="bg-slate-500 text-white px-4 py-2 rounded-lg" disabled={loading}><i className="fas fa-eye mr-2"></i>Preview</button>
@@ -442,9 +453,38 @@ const AdminCompanies: React.FC<AdminCompaniesProps> = ({ companies, setCompanies
                         <form onSubmit={handleSaveJob} className="space-y-4">
                             <input type="text" name="title" value={currentJob.title} onChange={handleJobInputChange} placeholder="Judul Posisi" className="block w-full px-3 py-2 border rounded-md" required />
                             <select name="company" value={currentJob.company} className="block w-full px-3 py-2 border rounded-md bg-slate-100" required disabled><option>{currentJob.company}</option></select>
-                            <textarea name="description" value={currentJob.description} onChange={handleJobInputChange} rows={3} placeholder="Deskripsi" className="block w-full px-3 py-2 border rounded-md" required />
-                            <div><label className="text-sm">Kualifikasi (satu per baris)</label><textarea name="qualifications" value={currentJob.qualifications?.join('\n')} onChange={(e) => setCurrentJob({...currentJob, qualifications: e.target.value.split('\n')})} rows={4} className="mt-1 block w-full px-3 py-2 border rounded-md" /></div>
-                            <div><label className="text-sm">Benefit (satu per baris)</label><textarea name="benefits" value={currentJob.benefits?.join('\n')} onChange={(e) => setCurrentJob({...currentJob, benefits: e.target.value.split('\n')})} rows={4} className="mt-1 block w-full px-3 py-2 border rounded-md" /></div>
+                            <AutoResizeTextarea 
+                                name="description" 
+                                value={currentJob.description || ''} 
+                                onChange={handleJobInputChange} 
+                                minRows={3}
+                                maxRows={15}
+                                placeholder="Deskripsi" 
+                                className="block w-full px-3 py-2 border rounded-md" 
+                                required 
+                            />
+                            <div>
+                                <label className="text-sm">Kualifikasi (satu per baris)</label>
+                                <AutoResizeTextarea 
+                                    name="qualifications" 
+                                    value={currentJob.qualifications?.join('\n') || ''} 
+                                    onChange={(e) => setCurrentJob({...currentJob, qualifications: e.target.value.split('\n')})} 
+                                    minRows={4}
+                                    maxRows={15}
+                                    className="mt-1 block w-full px-3 py-2 border rounded-md" 
+                                />
+                            </div>
+                            <div>
+                                <label className="text-sm">Benefit (satu per baris)</label>
+                                <AutoResizeTextarea 
+                                    name="benefits" 
+                                    value={currentJob.benefits?.join('\n') || ''} 
+                                    onChange={(e) => setCurrentJob({...currentJob, benefits: e.target.value.split('\n')})} 
+                                    minRows={4}
+                                    maxRows={15}
+                                    className="mt-1 block w-full px-3 py-2 border rounded-md" 
+                                />
+                            </div>
                             <div><label className="text-sm">Jurusan</label><div className="mt-1 p-3 border rounded-md max-h-40 overflow-y-auto grid grid-cols-3 gap-2">{allMajors.sort((a,b) => a.name.localeCompare(b.name)).map(major => (<label key={major.id} className="flex items-center text-sm gap-2"><input type="checkbox" checked={currentJob.majors?.includes(major.name) || false} onChange={() => handleMajorChange(major.name)} />{major.name}</label>))}</div></div>
                             <div><label className="text-sm">Tags</label><div className="mt-1 p-3 border rounded-md max-h-40 overflow-y-auto grid grid-cols-3 gap-2">{allTags.sort((a,b) => a.name.localeCompare(b.name)).map(tag => (<label key={tag.id} className="flex items-center text-sm gap-2"><input type="checkbox" checked={currentJob.tags?.includes(tag.name) || false} onChange={() => handleTagChange(tag.name)} />{tag.name}</label>))}</div></div>
                             <div className="grid grid-cols-2 gap-4">

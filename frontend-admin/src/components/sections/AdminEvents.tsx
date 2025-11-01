@@ -3,6 +3,7 @@ import { RecruitmentEvent, CompanyProfile } from '../../types';
 import { toast } from '../../utils/toast';
 import { downloadExcelTemplate } from '../../utils/excel';
 import Pagination from '../Pagination';
+import AutoResizeTextarea from '../AutoResizeTextarea';
 import { adminEventsService, activityLogsService } from '../../services/adminApi';
 
 // Beri tahu TypeScript tentang objek XLSX global dari CDN
@@ -486,11 +487,12 @@ const AdminEvents: React.FC<AdminEventsProps> = ({ events, setEvents, allCompani
 
                             <div>
                                 <label className="block text-sm font-medium text-slate-700">Tentang Event</label>
-                                <textarea
+                                <AutoResizeTextarea
                                     name="description"
                                     value={currentEvent.description || ''}
                                     onChange={handleInputChange}
-                                    rows={10}
+                                    minRows={5}
+                                    maxRows={20}
                                     className="mt-1 block w-full px-3 py-2 border border-slate-300 rounded-md"
                                     placeholder="Jelaskan tentang event ini..."
                                 />
@@ -563,7 +565,15 @@ const AdminEvents: React.FC<AdminEventsProps> = ({ events, setEvents, allCompani
 
                              <div>
                                 <label className="block text-sm font-medium text-slate-700">Posisi Dibuka</label>
-                                <textarea name="availablePositions" value={Array.isArray(currentEvent.availablePositions) ? currentEvent.availablePositions.join('\n') : ''} onChange={handleArrayTextareaChange} rows={4} className="mt-1 block w-full px-3 py-2 border border-slate-300 rounded-md" placeholder="Satu posisi per baris" />
+                                <AutoResizeTextarea 
+                                    name="availablePositions" 
+                                    value={Array.isArray(currentEvent.availablePositions) ? currentEvent.availablePositions.join('\n') : ''} 
+                                    onChange={handleArrayTextareaChange} 
+                                    minRows={4}
+                                    maxRows={15}
+                                    className="mt-1 block w-full px-3 py-2 border border-slate-300 rounded-md" 
+                                    placeholder="Satu posisi per baris" 
+                                />
                             </div>
                             
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
