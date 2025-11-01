@@ -250,13 +250,14 @@ const AdminJobs: React.FC<AdminJobsProps> = ({ jobs, setJobs, allCompanies, allM
         [companySearch, allCompanies]
     );
 
-    const handleFileImport = (event: Event) => {
+    const handleFileImport = async (event: Event) => {
         const file = (event.target as HTMLInputElement).files?.[0];
         if (!file) return;
 
         const reader = new FileReader();
-        reader.onload = (e) => {
+        reader.onload = async (e) => {
             try {
+                setLoading(true);
                 const data = new Uint8Array(e.target?.result as ArrayBuffer);
                 const workbook = XLSX.read(data, { type: 'array' });
                 const sheetName = workbook.SheetNames[0];
@@ -265,70 +266,97 @@ const AdminJobs: React.FC<AdminJobsProps> = ({ jobs, setJobs, allCompanies, allM
 
                 if (json.length === 0) {
                     toast('File kosong atau format tidak sesuai.');
+                    setLoading(false);
                     return;
                 }
 
-                const currentMaxId = Math.max(0, ...jobs.map(j => j.id));
-                let nextId = currentMaxId + 1;
                 let importedCount = 0;
                 let skippedCount = 0;
+                const newJobs: Job[] = [];
 
-                const newJobs: Job[] = json.map((row: any) => {
-                    const companyName = row['Nama Perusahaan'];
-                    const title = row['Judul Posisi'];
-                    
-                    if (!companyName || !title) {
+                for (const row of json) {
+                    try {
+                        const companyName = row['Nama Perusahaan'];
+                        const title = row['Judul Posisi'];
+                        
+                        if (!companyName || !title) {
+                            skippedCount++;
+                            continue;
+                        }
+
+                        const company = allCompanies.find(c => c.name.toLowerCase() === String(companyName).toLowerCase());
+
+                        if (!company) {
+                            console.warn(`Company not found: "${companyName}". Skipping job: "${title}"`);
+                            skippedCount++;
+                            continue;
+                        }
+
+                        const parseStringArray = (value: any): string[] => {
+                            if (!value) return [];
+                            return String(value).split(',').map(item => item.trim()).filter(Boolean);
+                        };
+                        
+                        // Create job in database
+                        const newJob = await adminJobsService.create({
+                            title: String(title),
+                            company: company.name,
+                            companySlug: company.slug,
+                            logo: company.logo,
+                            location: String(row['Lokasi'] || 'Lokasi tidak ditentukan'),
+                            province: String(row['Provinsi'] || ''),
+                            city: String(row['Kota'] || ''),
+                            type: String(row['Tipe Pekerjaan'] || 'Full Time'),
+                            category: String(row['Kategori'] || 'Swasta'),
+                            categoryColor: 'blue',
+                            description: String(row['Deskripsi'] || ''),
+                            posted: new Date().toISOString().split('T')[0],
+                            education: String(row['Pendidikan'] || 'SMA/SMK'),
+                            qualifications: parseStringArray(row['Kualifikasi']),
+                            benefits: parseStringArray(row['Benefit']),
+                            howToApply: String(row['Cara Melamar'] || ''),
+                            aboutCompany: company.description,
+                            experience: String(row['Pengalaman'] || 'Fresh Graduate'),
+                            tags: parseStringArray(row['Tags']),
+                            majors: parseStringArray(row['Jurusan']),
+                            videoEmbedUrl: String(row['URL Video'] || ''),
+                            pdfEmbedUrl: String(row['URL PDF'] || ''),
+                            salaryRange: String(row['Rentang Gaji'] || ''),
+                            dueDate: String(row['Tanggal Berakhir'] || ''),
+                        });
+                        
+                        newJobs.push(newJob);
+                        importedCount++;
+                    } catch (error) {
+                        console.error('Error creating job:', error);
                         skippedCount++;
-                        return null;
                     }
+                }
 
-                    const company = allCompanies.find(c => c.name.toLowerCase() === String(companyName).toLowerCase());
-
-                    if (!company) {
-                        console.warn(`Company not found: "${companyName}". Skipping job: "${title}"`);
-                        skippedCount++;
-                        return null;
-                    }
-
-                    const parseStringArray = (value: any): string[] => {
-                        if (!value) return [];
-                        return String(value).split(',').map(item => item.trim()).filter(Boolean);
-                    };
+                if (importedCount > 0) {
+                    setJobs(prev => [...newJobs, ...prev]);
                     
-                    const newJob: Job = {
-                        id: nextId++,
-                        title: String(title),
-                        company: company.name,
-                        companySlug: company.slug,
-                        logo: company.logo,
-                        location: String(row['Lokasi'] || 'Lokasi tidak ditentukan'),
-                        province: String(row['Provinsi'] || ''),
-                        city: String(row['Kota'] || ''),
-                        type: String(row['Tipe Pekerjaan'] || 'Full Time'),
-                        category: String(row['Kategori'] || 'Swasta'),
-                        categoryColor: 'blue',
-                        description: String(row['Deskripsi'] || ''),
-                        posted: 'Baru saja',
-                        education: String(row['Pendidikan'] || 'SMA/SMK'),
-                        qualifications: parseStringArray(row['Kualifikasi']),
-                        benefits: parseStringArray(row['Benefit']),
-                        howToApply: String(row['Cara Melamar'] || ''),
-                        aboutCompany: company.description,
-                        experience: String(row['Pengalaman'] || 'Fresh Graduate'),
-                        tags: parseStringArray(row['Tags']),
-                        majors: parseStringArray(row['Jurusan']),
-                    };
-                    importedCount++;
-                    return newJob;
-                }).filter((j): j is Job => j !== null);
-
-                if (newJobs.length > 0) {
-                    setJobs(prev => [...prev, ...newJobs]);
+                    // Log activity
+                    try {
+                        await activityLogsService.create({
+                            type: 'CREATE',
+                            category: 'Lowongan',
+                            text: `${importedCount} lowongan diimpor dari Excel.`,
+                        });
+                    } catch (logError) {
+                        console.warn('Failed to log activity:', logError);
+                    }
+                    
+                    addActivity({ 
+                        type: 'CREATE', 
+                        category: 'Lowongan', 
+                        text: `${importedCount} lowongan diimpor dari Excel.` 
+                    });
                 }
 
                 let message = '';
-                if (importedCount > 0) message += `${importedCount} lowongan berhasil diimpor. `;
-                if (skippedCount > 0) message += `${skippedCount} lowongan dilewati (perusahaan tidak ditemukan/data tidak valid).`;
+                if (importedCount > 0) message += `${importedCount} lowongan berhasil diimpor ke database. `;
+                if (skippedCount > 0) message += `${skippedCount} baris dilewati (perusahaan tidak ditemukan/data tidak valid).`;
                 if (!message) message = 'Tidak ada lowongan valid yang ditemukan di file.';
                 
                 toast(message);
@@ -336,6 +364,8 @@ const AdminJobs: React.FC<AdminJobsProps> = ({ jobs, setJobs, allCompanies, allM
             } catch (error) {
                 console.error("Error importing file:", error);
                 toast('Gagal mengimpor file. Pastikan formatnya benar.');
+            } finally {
+                setLoading(false);
             }
         };
         reader.readAsArrayBuffer(file);

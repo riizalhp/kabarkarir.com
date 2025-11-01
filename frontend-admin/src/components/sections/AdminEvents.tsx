@@ -202,13 +202,14 @@ const AdminEvents: React.FC<AdminEventsProps> = ({ events, setEvents, allCompani
         }
     };
 
-    const handleFileImport = (event: Event) => {
+    const handleFileImport = async (event: Event) => {
         const file = (event.target as HTMLInputElement).files?.[0];
         if (!file) return;
 
         const reader = new FileReader();
-        reader.onload = (e) => {
+        reader.onload = async (e) => {
             try {
+                setLoading(true);
                 const data = new Uint8Array(e.target?.result as ArrayBuffer);
                 const workbook = XLSX.read(data, { type: 'array' });
                 const sheetName = workbook.SheetNames[0];
@@ -217,42 +218,85 @@ const AdminEvents: React.FC<AdminEventsProps> = ({ events, setEvents, allCompani
 
                 if (json.length === 0) {
                     toast('File kosong atau format tidak sesuai.');
+                    setLoading(false);
                     return;
                 }
 
-                const currentMaxId = Math.max(0, ...events.map(e => e.id));
-                let nextId = currentMaxId + 1;
+                let successCount = 0;
+                let errorCount = 0;
+                const newEvents: RecruitmentEvent[] = [];
 
-                const newEvents: RecruitmentEvent[] = json.map((row: any): RecruitmentEvent | null => {
-                    const title = row['Judul Event'] || row['title'];
-                    if (!title) return null;
+                for (const row of json) {
+                    try {
+                        const title = row['Judul Event'] || row['title'];
+                        if (!title) {
+                            errorCount++;
+                            continue;
+                        }
+                        
+                        const parsePositions = (value: any): string[] => {
+                            if (!value) return [];
+                            return String(value).split(',').map(item => item.trim()).filter(Boolean);
+                        };
+                        
+                        // Create event in database
+                        const newEvent = await adminEventsService.create({
+                            title: String(title),
+                            organizer: String(row['Penyelenggara'] || 'N/A'),
+                            date: String(row['Tanggal'] || new Date().toISOString().split('T')[0]),
+                            time: String(row['Waktu'] || '09:00 - 17:00 WIB'),
+                            location: String(row['Lokasi'] || 'Online'),
+                            province: String(row['Provinsi'] || 'Online'),
+                            city: String(row['Kota'] || 'Online'),
+                            type: (row['Tipe'] || 'Job Fair') as RecruitmentEvent['type'],
+                            isFeatured: false,
+                            image: String(row['URL Gambar'] || ''),
+                            description: String(row['Deskripsi'] || ''),
+                            availablePositions: parsePositions(row['Posisi Dibuka']),
+                            mapDirectionUrl: String(row['URL Map Direction'] || ''),
+                            mapEmbedUrl: String(row['URL Map Embed'] || ''),
+                            videoEmbedUrl: String(row['URL Video'] || ''),
+                            pdfEmbedUrl: String(row['URL PDF'] || ''),
+                        });
+                        
+                        newEvents.push(newEvent);
+                        successCount++;
+                    } catch (error) {
+                        console.error('Error creating event:', error);
+                        errorCount++;
+                    }
+                }
+
+                if (successCount > 0) {
+                    setEvents(prev => [...newEvents, ...prev]);
                     
-                    return {
-                        id: nextId++,
-                        title: String(title),
-                        organizer: String(row['Penyelenggara'] || 'N/A'),
-                        date: String(row['Tanggal'] || 'Segera'),
-                        time: String(row['Waktu'] || '09:00 - 17:00 WIB'),
-                        location: String(row['Lokasi'] || 'Online'),
-                        province: String(row['Provinsi'] || 'Online'),
-                        city: String(row['Kota'] || 'Online'),
-                        type: (row['Tipe'] || 'Job Fair') as RecruitmentEvent['type'],
-                        isFeatured: false,
-                        image: `https://picsum.photos/seed/event${nextId}/800/450`,
-                        description: String(row['Deskripsi'] || ''),
-                    };
-                }).filter((event): event is RecruitmentEvent => event !== null);
-
-                if (newEvents.length > 0) {
-                    setEvents(prev => [...prev, ...newEvents]);
-                    toast(`${newEvents.length} event berhasil diimpor.`);
-                } else {
+                    // Log activity
+                    try {
+                        await activityLogsService.create({
+                            type: 'CREATE',
+                            category: 'Event',
+                            text: `${successCount} event diimpor dari Excel.`,
+                        });
+                    } catch (logError) {
+                        console.warn('Failed to log activity:', logError);
+                    }
+                    
+                    toast(`${successCount} event berhasil diimpor ke database.`);
+                }
+                
+                if (errorCount > 0) {
+                    toast(`${errorCount} baris gagal diimpor. Periksa format data.`);
+                }
+                
+                if (successCount === 0 && errorCount === 0) {
                     toast('Tidak ada event valid yang ditemukan di file.');
                 }
 
             } catch (error) {
                 console.error("Error importing file:", error);
                 toast('Gagal mengimpor file. Pastikan formatnya benar.');
+            } finally {
+                setLoading(false);
             }
         };
         reader.readAsArrayBuffer(file);

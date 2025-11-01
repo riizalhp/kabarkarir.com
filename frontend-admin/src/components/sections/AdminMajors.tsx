@@ -117,13 +117,14 @@ const AdminMajors: React.FC<AdminMajorsProps> = ({ majors, setMajors }) => {
         }
     };
     
-    const handleFileImport = (event: Event) => {
+    const handleFileImport = async (event: Event) => {
         const file = (event.target as HTMLInputElement).files?.[0];
         if (!file) return;
 
         const reader = new FileReader();
-        reader.onload = (e) => {
+        reader.onload = async (e) => {
             try {
+                setLoading(true);
                 const data = new Uint8Array(e.target?.result as ArrayBuffer);
                 const workbook = XLSX.read(data, { type: 'array' });
                 const sheetName = workbook.SheetNames[0];
@@ -132,31 +133,53 @@ const AdminMajors: React.FC<AdminMajorsProps> = ({ majors, setMajors }) => {
 
                 if (json.length === 0) {
                     toast('File kosong atau format tidak sesuai.');
+                    setLoading(false);
                     return;
                 }
 
-                const currentMaxId = Math.max(0, ...majors.map(m => m.id));
-                let nextId = currentMaxId + 1;
+                let successCount = 0;
+                let errorCount = 0;
+                const newMajors: Major[] = [];
 
-                const newMajors: Major[] = json.map((row: any) => {
-                    const name = row['Nama Jurusan'] || row['name'];
-                    if (!name) return null;
-                    return {
-                        id: nextId++,
-                        name: String(name).trim(),
-                    };
-                }).filter((m): m is Major => m !== null);
+                for (const row of json) {
+                    try {
+                        const name = row['Nama Jurusan'] || row['name'];
+                        if (!name || String(name).trim() === '') {
+                            errorCount++;
+                            continue;
+                        }
+                        
+                        // Create major in database
+                        const newMajor = await adminMajorsService.create({
+                            name: String(name).trim(),
+                        });
+                        
+                        newMajors.push(newMajor);
+                        successCount++;
+                    } catch (error) {
+                        console.error('Error creating major:', error);
+                        errorCount++;
+                    }
+                }
                 
-                if (newMajors.length > 0) {
-                    setMajors(prev => [...prev, ...newMajors]);
-                    toast(`${newMajors.length} jurusan berhasil diimpor.`);
-                } else {
+                if (successCount > 0) {
+                    setMajors(prev => [...newMajors, ...prev]);
+                    toast(`${successCount} jurusan berhasil diimpor ke database.`);
+                }
+                
+                if (errorCount > 0) {
+                    toast(`${errorCount} baris gagal diimpor. Periksa format data.`);
+                }
+                
+                if (successCount === 0 && errorCount === 0) {
                     toast('Tidak ada jurusan valid yang ditemukan di file.');
                 }
 
             } catch (error) {
                 console.error("Error importing file:", error);
                 toast('Gagal mengimpor file. Pastikan formatnya benar.');
+            } finally {
+                setLoading(false);
             }
         };
         reader.readAsArrayBuffer(file);

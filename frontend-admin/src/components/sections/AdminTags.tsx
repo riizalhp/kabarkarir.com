@@ -117,13 +117,14 @@ const AdminTags: React.FC<AdminTagsProps> = ({ tags, setTags }) => {
         }
     };
     
-    const handleFileImport = (event: Event) => {
+    const handleFileImport = async (event: Event) => {
         const file = (event.target as HTMLInputElement).files?.[0];
         if (!file) return;
 
         const reader = new FileReader();
-        reader.onload = (e) => {
+        reader.onload = async (e) => {
             try {
+                setLoading(true);
                 const data = new Uint8Array(e.target?.result as ArrayBuffer);
                 const workbook = XLSX.read(data, { type: 'array' });
                 const sheetName = workbook.SheetNames[0];
@@ -132,31 +133,53 @@ const AdminTags: React.FC<AdminTagsProps> = ({ tags, setTags }) => {
 
                 if (json.length === 0) {
                     toast('File kosong atau format tidak sesuai.');
+                    setLoading(false);
                     return;
                 }
 
-                const currentMaxId = Math.max(0, ...tags.map(m => m.id));
-                let nextId = currentMaxId + 1;
+                let successCount = 0;
+                let errorCount = 0;
+                const newTags: Tag[] = [];
 
-                const newTags: Tag[] = json.map((row: any) => {
-                    const name = row['Nama Tag'] || row['name'];
-                    if (!name) return null;
-                    return {
-                        id: nextId++,
-                        name: String(name).trim(),
-                    };
-                }).filter((t): t is Tag => t !== null);
+                for (const row of json) {
+                    try {
+                        const name = row['Nama Tag'] || row['name'];
+                        if (!name || String(name).trim() === '') {
+                            errorCount++;
+                            continue;
+                        }
+                        
+                        // Create tag in database
+                        const newTag = await adminTagsService.create({
+                            name: String(name).trim(),
+                        });
+                        
+                        newTags.push(newTag);
+                        successCount++;
+                    } catch (error) {
+                        console.error('Error creating tag:', error);
+                        errorCount++;
+                    }
+                }
                 
-                if (newTags.length > 0) {
-                    setTags(prev => [...prev, ...newTags]);
-                    toast(`${newTags.length} tag berhasil diimpor.`);
-                } else {
+                if (successCount > 0) {
+                    setTags(prev => [...newTags, ...prev]);
+                    toast(`${successCount} tag berhasil diimpor ke database.`);
+                }
+                
+                if (errorCount > 0) {
+                    toast(`${errorCount} baris gagal diimpor. Periksa format data.`);
+                }
+                
+                if (successCount === 0 && errorCount === 0) {
                     toast('Tidak ada tag valid yang ditemukan di file.');
                 }
 
             } catch (error) {
                 console.error("Error importing file:", error);
                 toast('Gagal mengimpor file. Pastikan formatnya benar.');
+            } finally {
+                setLoading(false);
             }
         };
         reader.readAsArrayBuffer(file);
