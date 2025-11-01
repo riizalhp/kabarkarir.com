@@ -108,8 +108,17 @@ export const adminCompaniesService = {
   },
 
   update: async (id: number, company: Partial<CompanyProfile>): Promise<CompanyProfile> => {
-    // Remove computed field jobsAvailable before sending to database
-    const { jobsAvailable, ...updateData } = company;
+    // Only send fields that can be updated in the database
+    const updateData: any = {};
+    
+    if (company.name !== undefined) updateData.name = company.name;
+    if (company.slug !== undefined) updateData.slug = company.slug;
+    if (company.logo !== undefined) updateData.logo = company.logo;
+    if (company.description !== undefined) updateData.description = company.description;
+    if (company.type !== undefined) updateData.type = company.type;
+    if (company.website !== undefined) updateData.website = company.website;
+    
+    console.log('Updating company ID:', id, 'with data:', updateData);
     
     const { data, error } = await supabase
       .from('companies')
@@ -118,7 +127,15 @@ export const adminCompaniesService = {
       .select()
       .single();
     
-    if (error) throw error;
+    if (error) {
+      console.error('Update error:', error);
+      throw error;
+    }
+    
+    if (!data) {
+      throw new Error('No data returned from update');
+    }
+    
     return data as CompanyProfile;
   },
 
