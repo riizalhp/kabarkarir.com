@@ -17,18 +17,22 @@ const LoginPage: React.FC<LoginPageProps> = ({ onLoginSuccess }) => {
 
         try {
             // Authenticate with Supabase
-            const { user, session } = await adminAuth.signIn(email, password);
+            const data = await adminAuth.signIn(email, password);
             
+            if (!data || !data.user) {
+                throw new Error('Login failed: No user data returned');
+            }
+
             // Get admin role
-            const adminRole = user?.app_metadata?.admin_role || 'Content Manager';
-            const adminName = user?.user_metadata?.name || email.split('@')[0];
+            const adminRole = data.user.user_metadata?.admin_role || 'Content Manager';
+            const adminName = data.user.user_metadata?.name || email.split('@')[0];
 
             toast('Login berhasil! Selamat datang, ' + adminName);
             
             // Pass user data to parent
             onLoginSuccess({
-                id: user?.id,
-                email: user?.email,
+                id: data.user.id,
+                email: data.user.email,
                 name: adminName,
                 role: adminRole,
             });

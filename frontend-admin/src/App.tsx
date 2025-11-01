@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import ToastContainer from './components/ToastContainer';
 import AppRoutes from './AppRoutes';
-import { adminAuth } from './lib/supabase';
+import { adminAuth, supabase } from './lib/supabase';
 
 const App: React.FC = () => {
   const location = useLocation();
@@ -16,16 +16,46 @@ const App: React.FC = () => {
   // Check authentication on mount
   useEffect(() => {
     checkAuth();
+
+    // Listen for auth state changes
+    const { data: authListener } = supabase.auth.onAuthStateChange(async (event, session) => {
+      console.log('Auth state changed:', event);
+      
+      if (event === 'SIGNED_OUT') {
+        setIsLoggedIn(false);
+        setCurrentUser(null);
+        navigate('/login');
+      } else if (event === 'SIGNED_IN' || event === 'TOKEN_REFRESHED') {
+        if (session && session.user) {
+          const userRole = session.user.user_metadata?.role;
+          if (userRole === 'admin') {
+            setIsLoggedIn(true);
+            const adminRole = session.user.user_metadata?.admin_role || 'Content Manager';
+            setCurrentUser({
+              id: session.user.id,
+              email: session.user.email,
+              name: session.user.user_metadata?.name || session.user.email?.split('@')[0],
+              role: adminRole,
+            });
+          }
+        }
+      }
+    });
+
+    return () => {
+      authListener?.subscription?.unsubscribe();
+    };
   }, []);
 
   const checkAuth = async () => {
     try {
       const session = await adminAuth.getSession();
       if (session && session.user) {
-        const isAdmin = await adminAuth.isAdmin();
-        if (isAdmin) {
+        // Verify admin role
+        const userRole = session.user.user_metadata?.role;
+        if (userRole === 'admin') {
           setIsLoggedIn(true);
-          const adminRole = await adminAuth.getAdminRole();
+          const adminRole = session.user.user_metadata?.admin_role || 'Content Manager';
           setCurrentUser({
             id: session.user.id,
             email: session.user.email,
@@ -36,7 +66,9 @@ const App: React.FC = () => {
           // Not admin, sign out
           await adminAuth.signOut();
           setIsLoggedIn(false);
-          navigate('/login');
+          if (location.pathname !== '/login') {
+            navigate('/login');
+          }
         }
       } else {
         setIsLoggedIn(false);
@@ -46,7 +78,10 @@ const App: React.FC = () => {
       }
     } catch (error) {
       console.error('Auth check error:', error);
+      // Clear potentially corrupted session
+      await adminAuth.signOut().catch(() => {});
       setIsLoggedIn(false);
+      setCurrentUser(null);
       if (location.pathname !== '/login') {
         navigate('/login');
       }

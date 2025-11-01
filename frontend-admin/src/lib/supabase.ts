@@ -11,9 +11,10 @@ export const supabase = createClient(supabaseUrl, supabaseAnonKey, {
   auth: {
     autoRefreshToken: true,
     persistSession: true,
-    detectSessionInUrl: true,
+    detectSessionInUrl: false,
     storage: window.localStorage,
     storageKey: 'kabarkarir-admin-auth',
+    flowType: 'pkce',
   },
 });
 
