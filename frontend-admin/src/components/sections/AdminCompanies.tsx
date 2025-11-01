@@ -109,7 +109,9 @@ const AdminCompanies: React.FC<AdminCompaniesProps> = ({ companies, setCompanies
             setLoading(true);
             
             if (currentCompany.id) {
-                const updated = await adminCompaniesService.update(currentCompany.id, currentCompany);
+                // Remove jobsAvailable from update payload (it's a computed field)
+                const { jobsAvailable, ...updateData } = currentCompany;
+                const updated = await adminCompaniesService.update(currentCompany.id, updateData);
                 setCompanies(prevCompanies => prevCompanies.map(c => c.id === currentCompany.id ? updated : c));
                 
                 await activityLogsService.create({
@@ -127,6 +129,7 @@ const AdminCompanies: React.FC<AdminCompaniesProps> = ({ companies, setCompanies
                     description: currentCompany.description || '',
                     type: currentCompany.type || 'SWASTA',
                     slug: currentCompany.name?.toLowerCase().replace(/ /g, '-') || '',
+                    website: currentCompany.website || '',
                 });
                 
                 setCompanies(prevCompanies => [newCompany, ...prevCompanies]);

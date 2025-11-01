@@ -108,9 +108,12 @@ export const adminCompaniesService = {
   },
 
   update: async (id: number, company: Partial<CompanyProfile>): Promise<CompanyProfile> => {
+    // Remove computed field jobsAvailable before sending to database
+    const { jobsAvailable, ...updateData } = company;
+    
     const { data, error } = await supabase
       .from('companies')
-      .update(company)
+      .update(updateData)
       .eq('id', id)
       .select()
       .single();
