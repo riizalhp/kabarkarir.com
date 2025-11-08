@@ -9,7 +9,7 @@ interface MisiDetailPageProps {
   onStart: (offerId: number) => void;
   onNavigateToBlog: () => void;
   onNavigateToEventRecruitment: () => void;
-  onSelectEvent: (eventId: number) => void;
+  onSelectEvent: (eventSlug: string) => void;
   onSelectCompany: (companySlug: string) => void;
   trendingCompanies: Company[];
   latestArticles: BlogPost[];

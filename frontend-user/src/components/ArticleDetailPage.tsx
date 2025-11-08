@@ -8,7 +8,7 @@ interface ArticleDetailPageProps {
   post: BlogPost;
   onNavigateToBlog: () => void;
   onNavigateToEventRecruitment: () => void;
-  onSelectEvent: (eventId: number) => void;
+  onSelectEvent: (eventSlug: string) => void;
   isPreviewMode?: boolean;
   trendingCompanies: Company[];
   latestArticles: BlogPost[];
@@ -26,7 +26,7 @@ const ArticleDetailPage: React.FC<ArticleDetailPageProps> = ({ post, onNavigateT
         title: `${post.title} | Blog KabarKarir.com`,
         description: post.description?.substring(0, 155) || `Baca artikel ${post.title} di blog KabarKarir.com. Temukan tips karir, panduan melamar kerja, dan informasi menarik seputar dunia kerja.`,
         keywords: `${post.title}, ${post.category}, tips karir, panduan kerja, blog karir`,
-        canonical: `https://www.kabarkarir.com/blog/${post.id}/${generateSlug(post.title)}`,
+        canonical: `https://www.kabarkarir.com/blog/${post.slug || post.id}`,
         ogImage: post.image || 'https://www.kabarkarir.com/og-image.jpg',
         ogType: 'article'
       });
@@ -80,3 +80,4 @@ const ArticleDetailPage: React.FC<ArticleDetailPageProps> = ({ post, onNavigateT
 };
 
 export default ArticleDetailPage;
+

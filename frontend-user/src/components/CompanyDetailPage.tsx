@@ -2,7 +2,7 @@ import React, { useState, useEffect, useMemo } from 'react';
 import { Job, CompanyProfile, Company, RecruitmentEvent, BlogPost } from '../types';
 import JobCard from './JobCard';
 import Sidebar from './Sidebar';
-import Pagination from './Pagination';
+import LoadMore from './LoadMore';
 import { viewTrackingService } from '../services/viewTracking';
 import { injectJSONLD, updateMetaTags, generateCompanySchema, generateBreadcrumbSchema } from '../utils/seo';
 
@@ -11,19 +11,20 @@ interface CompanyDetailPageProps {
   companyPreview?: CompanyProfile;
   allJobs: Job[];
   allCompanies: CompanyProfile[];
-  onSelectJob: (jobId: number) => void;
+  onSelectJob: (jobSlug: string) => void;
   onSelectCategory: (category: string) => void;
   onSelectCompany: (companySlug: string) => void;
   onNavigateToBlog: () => void;
   onNavigateToEventRecruitment: () => void;
-  onSelectEvent: (eventId: number) => void;
+  onSelectEvent: (eventSlug: string) => void;
   isPreviewMode?: boolean;
   trendingCompanies: Company[];
   latestArticles: BlogPost[];
   allEvents: RecruitmentEvent[];
 }
 
-const ITEMS_PER_PAGE = 8;
+const INITIAL_ITEMS = 12;
+const ITEMS_TO_LOAD = 12;
 
 const CompanyDetailPage: React.FC<CompanyDetailPageProps> = ({ companySlug, companyPreview, allJobs, allCompanies, onSelectJob, onSelectCategory, onSelectCompany, onNavigateToBlog, onNavigateToEventRecruitment, onSelectEvent, isPreviewMode = false, trendingCompanies, latestArticles, allEvents }) => {
   const [currentPage, setCurrentPage] = useState(1);
@@ -220,3 +221,5 @@ const CompanyDetailPage: React.FC<CompanyDetailPageProps> = ({ companySlug, comp
 };
 
 export default CompanyDetailPage;
+
+

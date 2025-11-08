@@ -26,12 +26,8 @@ const staticUrls: SitemapUrl[] = [
   { loc: '/blog', lastmod: new Date().toISOString().split('T')[0], changefreq: 'daily', priority: 0.9 },
   { loc: '/perusahaan', lastmod: new Date().toISOString().split('T')[0], changefreq: 'weekly', priority: 0.9 },
   { loc: '/event', lastmod: new Date().toISOString().split('T')[0], changefreq: 'weekly', priority: 0.9 },
-  { loc: '/pelatihan', lastmod: new Date().toISOString().split('T')[0], changefreq: 'weekly', priority: 0.8 },
   { loc: '/misi-cuan', lastmod: new Date().toISOString().split('T')[0], changefreq: 'weekly', priority: 0.8 },
   { loc: '/komunitas', lastmod: new Date().toISOString().split('T')[0], changefreq: 'monthly', priority: 0.7 },
-  { loc: '/psikotest', lastmod: new Date().toISOString().split('T')[0], changefreq: 'monthly', priority: 0.7 },
-  { loc: '/bangun-cv', lastmod: new Date().toISOString().split('T')[0], changefreq: 'monthly', priority: 0.7 },
-  { loc: '/konsul-karir', lastmod: new Date().toISOString().split('T')[0], changefreq: 'monthly', priority: 0.7 },
   { loc: '/pasang-iklan', lastmod: new Date().toISOString().split('T')[0], changefreq: 'monthly', priority: 0.6 },
   { loc: '/join-telegram', lastmod: new Date().toISOString().split('T')[0], changefreq: 'monthly', priority: 0.6 },
   { loc: '/favorites', lastmod: new Date().toISOString().split('T')[0], changefreq: 'weekly', priority: 0.5 },
@@ -194,13 +190,12 @@ export const fetchPelatihanUrls = async (): Promise<SitemapUrl[]> => {
 // Generate complete sitemap XML
 export const generateSitemapXML = async (): Promise<string> => {
   // Fetch all dynamic URLs in parallel
-  const [jobUrls, companyUrls, eventUrls, blogUrls, misiUrls, pelatihanUrls] = await Promise.all([
+  const [jobUrls, companyUrls, eventUrls, blogUrls, misiUrls] = await Promise.all([
     fetchJobUrls(),
     fetchCompanyUrls(),
     fetchEventUrls(),
     fetchBlogUrls(),
-    fetchMisiCuanUrls(),
-    fetchPelatihanUrls()
+    fetchMisiCuanUrls()
   ]);
 
   // Combine all URLs
@@ -211,8 +206,7 @@ export const generateSitemapXML = async (): Promise<string> => {
     ...companyUrls,
     ...eventUrls,
     ...blogUrls,
-    ...misiUrls,
-    ...pelatihanUrls
+    ...misiUrls
   ];
 
   // Generate XML

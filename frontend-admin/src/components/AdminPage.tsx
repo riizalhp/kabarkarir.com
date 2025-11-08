@@ -182,6 +182,9 @@ const AdminPage: React.FC<AdminPageProps> = (props) => {
                                 misiChange={1}
                                 submissionCount={misiSubmissions.length}
                                 submissionChange={12}
+                                currentPage={1}
+                                totalPages={1}
+                                onPageChange={() => {}}
                               />;
       case 'jobs': return <AdminJobs jobs={jobs} setJobs={setJobs} allCompanies={allCompaniesWithCount} allMajors={majors} allTags={tags} onShowPreview={handleShowPreview} addActivity={addActivity} />;
       case 'companies': return <AdminCompanies companies={allCompaniesWithCount} setCompanies={setCompanies} onShowPreview={handleShowPreview} jobs={jobs} setJobs={setJobs} allMajors={majors} allTags={tags} addActivity={addActivity} />;
@@ -205,7 +208,20 @@ const AdminPage: React.FC<AdminPageProps> = (props) => {
                                 tags={tags} setTags={setTags}
                                 users={users} setUsers={setUsers}
                              />;
-      default: return <AdminDashboard recentActivities={recentActivities} jobCount={jobs.length} jobChange={0} companyCount={companies.length} companyChange={0} misiCount={misiOffers.length} misiChange={0} submissionCount={misiSubmissions.length} submissionChange={0} />;
+      default: return <AdminDashboard 
+                        recentActivities={recentActivities} 
+                        jobCount={jobs.length} 
+                        jobChange={0} 
+                        companyCount={companies.length} 
+                        companyChange={0} 
+                        misiCount={misiOffers.length} 
+                        misiChange={0} 
+                        submissionCount={misiSubmissions.length} 
+                        submissionChange={0}
+                        currentPage={1}
+                        totalPages={1}
+                        onPageChange={() => {}}
+                      />;
     }
   };
 

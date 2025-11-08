@@ -43,36 +43,58 @@ interface AdminDashboardProps {
     misiChange: number;
     submissionCount: number;
     submissionChange: number;
+    currentPage: number;
+    totalPages: number;
+    onPageChange: (page: number) => void;
 }
 
-const timeSince = (date: Date): string => {
-    const seconds = Math.floor((new Date().getTime() - date.getTime()) / 1000);
-    let interval = seconds / 31536000;
-    if (interval > 1) return Math.floor(interval) + " tahun lalu";
-    interval = seconds / 2592000;
-    if (interval > 1) return Math.floor(interval) + " bulan lalu";
-    interval = seconds / 86400;
-    if (interval > 1) return Math.floor(interval) + " hari lalu";
-    interval = seconds / 3600;
-    if (interval > 1) return Math.floor(interval) + " jam lalu";
-    interval = seconds / 60;
-    if (interval > 1) return Math.floor(interval) + " menit lalu";
-    return "Baru saja";
+const timeSince = (date: Date | string | undefined): string => {
+    if (!date) return "Baru saja";
+    
+    try {
+        const dateObj = typeof date === 'string' ? new Date(date) : date;
+        
+        // Check if date is valid
+        if (isNaN(dateObj.getTime())) return "Baru saja";
+        
+        const seconds = Math.floor((new Date().getTime() - dateObj.getTime()) / 1000);
+        
+        // If date is in the future, return "Baru saja"
+        if (seconds < 0) return "Baru saja";
+        
+        let interval = seconds / 31536000;
+        if (interval > 1) return Math.floor(interval) + " tahun lalu";
+        interval = seconds / 2592000;
+        if (interval > 1) return Math.floor(interval) + " bulan lalu";
+        interval = seconds / 86400;
+        if (interval > 1) return Math.floor(interval) + " hari lalu";
+        interval = seconds / 3600;
+        if (interval > 1) return Math.floor(interval) + " jam lalu";
+        interval = seconds / 60;
+        if (interval > 1) return Math.floor(interval) + " menit lalu";
+        return "Baru saja";
+    } catch (error) {
+        console.error('Error parsing date:', error);
+        return "Baru saja";
+    }
 };
 
-const ITEMS_PER_PAGE = 10;
+const ITEMS_PER_PAGE = 12;
 
-const AdminDashboard: React.FC<AdminDashboardProps> = ({ recentActivities, jobCount, jobChange, companyCount, companyChange, misiCount, misiChange, submissionCount, submissionChange }) => {
-    const [currentPage, setCurrentPage] = useState(1);
-
-    const totalPages = Math.ceil(recentActivities.length / ITEMS_PER_PAGE);
-    const startIndex = (currentPage - 1) * ITEMS_PER_PAGE;
-    const currentActivities = recentActivities.slice(startIndex, startIndex + ITEMS_PER_PAGE);
-
-    const handlePageChange = (page: number) => {
-        setCurrentPage(page);
-    };
-
+const AdminDashboard: React.FC<AdminDashboardProps> = ({ 
+    recentActivities, 
+    jobCount, 
+    jobChange, 
+    companyCount, 
+    companyChange, 
+    misiCount, 
+    misiChange, 
+    submissionCount, 
+    submissionChange,
+    currentPage,
+    totalPages,
+    onPageChange
+}) => {
     return (
         <div className="space-y-6">
             {/* Stats Cards */}
@@ -88,8 +110,8 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({ recentActivities, jobCo
                 <div className="bg-white p-6 rounded-lg shadow-md flex flex-col">
                     <h3 className="font-bold text-lg text-secondary mb-4">Aktivitas Terbaru</h3>
                     <ul className="space-y-4 flex-grow">
-                        {currentActivities.length > 0 ? (
-                            currentActivities.map(activity => {
+                        {recentActivities.length > 0 ? (
+                            recentActivities.map(activity => {
                                 const iconInfo = {
                                     CREATE: { icon: 'fas fa-plus', color: 'bg-green-100 text-green-600' },
                                     UPDATE: { icon: 'fas fa-edit', color: 'bg-blue-100 text-blue-600' },
@@ -114,7 +136,7 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({ recentActivities, jobCo
                         <Pagination
                             currentPage={currentPage}
                             totalPages={totalPages}
-                            onPageChange={handlePageChange}
+                            onPageChange={onPageChange}
                         />
                     )}
                 </div>

@@ -10,7 +10,7 @@ interface PelatihanDetailPageProps {
   pelatihan: PelatihanInfo;
   onNavigateToBlog: () => void;
   onNavigateToEventRecruitment: () => void;
-  onSelectEvent: (eventId: number) => void;
+  onSelectEvent: (eventSlug: string) => void;
   isPreviewMode?: boolean;
   trendingCompanies: Company[];
   latestArticles: BlogPost[];

@@ -74,24 +74,23 @@ export const adminJobsService = {
 // ============================================
 export const adminCompaniesService = {
   getAll: async (): Promise<CompanyProfile[]> => {
+    // Use a single query with aggregation to count jobs per company
     const { data, error } = await supabase
       .from('companies')
-      .select('*')
+      .select(`
+        *,
+        jobs:jobs(count)
+      `)
       .order('name', { ascending: true });
     
     if (error) throw error;
 
-    // Add jobs count
-    const companiesWithCount = await Promise.all(
-      (data || []).map(async (company) => {
-        const { count } = await supabase
-          .from('jobs')
-          .select('*', { count: 'exact', head: true })
-          .eq('company_slug', company.slug);
-        
-        return { ...company, jobsAvailable: count || 0 };
-      })
-    );
+    // Transform the data to include jobsAvailable
+    const companiesWithCount = (data || []).map((company: any) => {
+      const jobsAvailable = company.jobs?.[0]?.count || 0;
+      const { jobs, ...companyData } = company;
+      return { ...companyData, jobsAvailable };
+    });
     
     return companiesWithCount as CompanyProfile[];
   },
@@ -459,14 +458,23 @@ export const activityLogsService = {
     return data;
   },
 
-  getRecent: async (limit: number = 10) => {
+  getRecent: async (limit: number = 10, offset: number = 0) => {
     const { data, error } = await supabase
       .from('activity_logs')
       .select('*')
       .order('created_at', { ascending: false })
-      .limit(limit);
+      .range(offset, offset + limit - 1);
     
     if (error) throw error;
     return data;
+  },
+
+  getCount: async () => {
+    const { count, error } = await supabase
+      .from('activity_logs')
+      .select('*', { count: 'exact', head: true });
+    
+    if (error) throw error;
+    return count || 0;
   },
 };

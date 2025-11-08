@@ -26,19 +26,13 @@ const CompaniesPage: React.FC<CompaniesPageProps> = ({ onNavigateHome, onLogout,
     try {
       const [jobsData, companiesData, majorsData, tagsData] = await Promise.all([
         adminJobsService.getAll(),
-        adminCompaniesService.getAll(),
+        adminCompaniesService.getAll(), // jobsAvailable already calculated in API
         adminMajorsService.getAll(),
         adminTagsService.getAll(),
       ]);
 
       setJobs(jobsData);
-      
-      // Add job count to companies
-      const companiesWithCount = companiesData.map(company => ({
-        ...company,
-        jobsAvailable: jobsData.filter(job => job.companySlug === company.slug).length
-      }));
-      setCompanies(companiesWithCount);
+      setCompanies(companiesData); // Use data directly from API
       setMajors(majorsData);
       setTags(tagsData);
     } catch (error) {

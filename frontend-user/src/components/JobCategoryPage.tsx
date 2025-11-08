@@ -1,28 +1,31 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { PROVINCES, CITIES_BY_PROVINCE } from '../constants';
 import { Job, Company, RecruitmentEvent, BlogPost } from '../types';
+import { deslugify } from '../utils/slugify';
 import JobCard from './JobCard';
 import Sidebar from './Sidebar';
-import Pagination from './Pagination';
+import LoadMore from './LoadMore';
 
 interface JobCategoryPageProps {
   category: string;
   allJobs: Job[];
-  onSelectJob: (jobId: number) => void;
+  onSelectJob: (jobSlug: string) => void;
   onSelectCategory: (category: string) => void;
   onSelectCompany: (companySlug: string) => void;
   onNavigateToBlog: () => void;
   onNavigateToEventRecruitment: () => void;
-  onSelectEvent: (eventId: number) => void;
+  onSelectEvent: (eventSlug: string) => void;
   trendingCompanies: Company[];
   latestArticles: BlogPost[];
   allEvents: RecruitmentEvent[];
 }
 
-const ITEMS_PER_PAGE = 10;
+const INITIAL_ITEMS = 10;
+const ITEMS_TO_LOAD = 10;
 
 const JobCategoryPage: React.FC<JobCategoryPageProps> = ({ category, allJobs, onSelectJob, onSelectCategory, onSelectCompany, onNavigateToBlog, onNavigateToEventRecruitment, onSelectEvent, trendingCompanies, latestArticles, allEvents }) => {
-  const [currentPage, setCurrentPage] = useState(1);
+  const [visibleItems, setVisibleItems] = useState(INITIAL_ITEMS);
+  const [isLoading, setIsLoading] = useState(false);
   
   // State for filter inputs
   const [keyword, setKeyword] = useState('');
@@ -62,7 +65,7 @@ const JobCategoryPage: React.FC<JobCategoryPageProps> = ({ category, allJobs, on
   useEffect(() => {
     // Reset filters and page when category changes
     handleReset();
-    setCurrentPage(1);
+    setVisibleItems(INITIAL_ITEMS);
   }, [category]);
   
   const handleSearch = () => {
@@ -71,7 +74,7 @@ const JobCategoryPage: React.FC<JobCategoryPageProps> = ({ category, allJobs, on
       province: selectedProvince,
       city: selectedCity
     });
-    setCurrentPage(1);
+    setVisibleItems(INITIAL_ITEMS);
   };
 
   const handleReset = () => {
@@ -79,7 +82,7 @@ const JobCategoryPage: React.FC<JobCategoryPageProps> = ({ category, allJobs, on
     setSelectedProvince('');
     setSelectedCity('');
     setActiveFilters({ keyword: '', province: '', city: '' });
-    setCurrentPage(1);
+    setVisibleItems(INITIAL_ITEMS);
   };
 
   const filteredJobs = useMemo(() => {
@@ -87,15 +90,27 @@ const JobCategoryPage: React.FC<JobCategoryPageProps> = ({ category, allJobs, on
 
     // 1. Initial Category Filter
     if (category && category !== 'Lowongan Terbaru') {
-        const normalizedCategory = category.toLowerCase();
+        // Convert slug to readable format for matching
+        const readableCategory = deslugify(category);
+        const normalizedCategory = category.toLowerCase().replace(/-/g, ' ');
+        const normalizedReadable = readableCategory.toLowerCase();
+        
         jobs = jobs.filter(job => {
             const lowerCaseTags = job.tags.map(t => t.toLowerCase());
             return job.category.toLowerCase() === normalizedCategory ||
+                   job.category.toLowerCase() === normalizedReadable ||
                    job.type.toLowerCase() === normalizedCategory ||
+                   job.type.toLowerCase() === normalizedReadable ||
                    job.education.toLowerCase() === normalizedCategory ||
+                   job.education.toLowerCase() === normalizedReadable ||
                    job.experience.toLowerCase() === normalizedCategory ||
-                   (job.majors && job.majors.some(major => major.toLowerCase().includes(normalizedCategory))) ||
-                   lowerCaseTags.includes(normalizedCategory);
+                   job.experience.toLowerCase() === normalizedReadable ||
+                   (job.majors && job.majors.some(major => 
+                     major.toLowerCase().includes(normalizedCategory) ||
+                     major.toLowerCase().includes(normalizedReadable)
+                   )) ||
+                   lowerCaseTags.includes(normalizedCategory) ||
+                   lowerCaseTags.includes(normalizedReadable);
         });
     }
 
@@ -149,14 +164,15 @@ const JobCategoryPage: React.FC<JobCategoryPageProps> = ({ category, allJobs, on
     return jobs;
   }, [category, activeFilters, allJobs]);
   
-  const totalPages = Math.ceil(filteredJobs.length / ITEMS_PER_PAGE);
-  const startIndex = (currentPage - 1) * ITEMS_PER_PAGE;
-  const endIndex = startIndex + ITEMS_PER_PAGE;
-  const currentJobs = filteredJobs.slice(startIndex, endIndex);
+  const currentJobs = filteredJobs.slice(0, visibleItems);
+  const hasMore = visibleItems < filteredJobs.length;
 
-  const handlePageChange = (page: number) => {
-    setCurrentPage(page);
-    window.scrollTo({ top: 0, behavior: 'smooth' });
+  const handleLoadMore = () => {
+    setIsLoading(true);
+    setTimeout(() => {
+      setVisibleItems(prev => prev + ITEMS_TO_LOAD);
+      setIsLoading(false);
+    }, 300);
   };
 
 
@@ -240,10 +256,12 @@ const JobCategoryPage: React.FC<JobCategoryPageProps> = ({ category, allJobs, on
                     ))}
                     </div>
 
-                    <Pagination 
-                      currentPage={currentPage}
-                      totalPages={totalPages}
-                      onPageChange={handlePageChange}
+                    <LoadMore
+                      hasMore={hasMore}
+                      isLoading={isLoading}
+                      onLoadMore={handleLoadMore}
+                      itemsShown={currentJobs.length}
+                      totalItems={filteredJobs.length}
                     />
                 </>
                 ) : (

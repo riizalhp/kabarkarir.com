@@ -1,7 +1,6 @@
 
 import React from 'react';
 import { Company, BlogPost, RecruitmentEvent } from '../types';
-import GoogleSidebarAd from './GoogleSidebarAd';
 
 interface TrendingCompaniesProps {
     companies: Company[];
@@ -39,7 +38,7 @@ const TrendingCompanies: React.FC<TrendingCompaniesProps> = ({ companies }) => (
 interface SidebarProps {
   onNavigateToBlog: () => void;
   onNavigateToEventRecruitment: () => void;
-  onSelectEvent: (eventId: number) => void;
+  onSelectEvent: (eventSlug: string) => void;
   trendingCompanies: Company[];
   latestArticles: BlogPost[];
   allEvents: RecruitmentEvent[];
@@ -54,7 +53,7 @@ const LatestArticlesWidget: React.FC<Pick<SidebarProps, 'onNavigateToBlog' | 'la
     <div className="p-4">
       <div className="space-y-2">
         {latestArticles.map(article => (
-          <a href="#" key={article.id} className="block hover:bg-gray-50 p-2 rounded transition">
+          <a href={`/blog/${article.slug || article.id}`} key={article.id} className="block hover:bg-gray-50 p-2 rounded transition">
             <h4 className="font-medium text-secondary hover:text-primary text-sm transition-colors">{article.title}</h4>
             <div className="flex items-center gap-3 text-xs text-gray-500 mt-1">
               <span>{article.posted}</span>
@@ -104,7 +103,7 @@ const RecruitmentEvents: React.FC<Pick<SidebarProps, 'onNavigateToEventRecruitme
                         </div>
                     )}
                     <div className="mt-3">
-                        <a href="#" onClick={(e) => { e.preventDefault(); onSelectEvent(event.id); }} className="text-secondary text-xs font-medium hover:text-primary">
+                        <a href="#" onClick={(e) => { e.preventDefault(); onSelectEvent(event.slug || String(event.id)); }} className="text-secondary text-xs font-medium hover:text-primary">
                             Lihat Detail
                         </a>
                     </div>
@@ -144,7 +143,6 @@ const Sidebar: React.FC<SidebarProps> = ({ onNavigateToBlog, onNavigateToEventRe
   return (
     <aside className="w-full lg:w-1/3">
       <TrendingCompanies companies={trendingCompanies} />
-      <GoogleSidebarAd />
       <LatestArticlesWidget onNavigateToBlog={onNavigateToBlog} latestArticles={latestArticles} />
       <RecruitmentEvents onNavigateToEventRecruitment={onNavigateToEventRecruitment} onSelectEvent={onSelectEvent} allEvents={allEvents} />
       <DownloadAppBanner />

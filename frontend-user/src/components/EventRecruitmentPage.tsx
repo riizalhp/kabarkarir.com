@@ -2,22 +2,23 @@ import React, { useState, useMemo, useEffect } from 'react';
 import { PROVINCES, CITIES_BY_PROVINCE } from '../constants';
 import { RecruitmentEvent, Company, BlogPost } from '../types';
 import Sidebar from './Sidebar';
-import Pagination from './Pagination';
+import LoadMore from './LoadMore';
 
 interface EventRecruitmentPageProps {
   allEvents: RecruitmentEvent[];
   onNavigateToBlog: () => void;
   onNavigateToEventRecruitment: () => void;
-  onSelectEvent: (eventId: number) => void;
+  onSelectEvent: (eventSlug: string) => void;
   trendingCompanies: Company[];
   latestArticles: BlogPost[];
 }
 
-const ITEMS_PER_PAGE = 6;
+const INITIAL_ITEMS = 6;
+const ITEMS_TO_LOAD = 6;
 
-const EventCard: React.FC<{ event: RecruitmentEvent; onSelectEvent: (eventId: number) => void }> = ({ event, onSelectEvent }) => (
+const EventCard: React.FC<{ event: RecruitmentEvent; onSelectEvent: (eventSlug: string) => void }> = ({ event, onSelectEvent }) => (
     <div 
-        onClick={() => onSelectEvent(event.id)}
+        onClick={() => onSelectEvent(event.slug || String(event.id))}
         className={`bg-white rounded-lg shadow overflow-hidden flex flex-col transition duration-300 hover:shadow-lg hover:-translate-y-1 cursor-pointer h-full ${event.isFeatured ? 'border-2 border-accent' : ''}`}
     >
         <div className="relative p-5 flex-grow">
@@ -35,7 +36,7 @@ const EventCard: React.FC<{ event: RecruitmentEvent; onSelectEvent: (eventId: nu
             </div>
         </div>
         <div className="bg-gray-50 p-4 border-t border-gray-200 mt-auto">
-            <button onClick={() => onSelectEvent(event.id)} className="text-secondary font-medium hover:text-primary transition text-sm">
+            <button onClick={() => onSelectEvent(event.slug || String(event.id))} className="text-secondary font-medium hover:text-primary transition text-sm">
                 Lihat Detail & Daftar
             </button>
         </div>
@@ -47,7 +48,8 @@ const EventRecruitmentPage: React.FC<EventRecruitmentPageProps> = ({ allEvents, 
   const [selectedProvince, setSelectedProvince] = useState(''); // Stores province ID
   const [selectedCity, setSelectedCity] = useState(''); // Stores city NAME
   const [searchTerm, setSearchTerm] = useState('');
-  const [currentPage, setCurrentPage] = useState(1);
+  const [visibleItems, setVisibleItems] = useState(INITIAL_ITEMS);
+  const [isLoading, setIsLoading] = useState(false);
 
   const [provinceOptions, setProvinceOptions] = useState<{ id: string, name: string }[]>([]);
   const [cityOptions, setCityOptions] = useState<{ id: string, name: string }[]>([]);
@@ -69,7 +71,7 @@ const EventRecruitmentPage: React.FC<EventRecruitmentPageProps> = ({ allEvents, 
   }, [selectedProvince]);
 
   useEffect(() => {
-    setCurrentPage(1);
+    setVisibleItems(INITIAL_ITEMS);
   }, [selectedProvince, selectedCity, searchTerm]);
 
   const filteredEvents = useMemo(() => {
@@ -100,14 +102,15 @@ const EventRecruitmentPage: React.FC<EventRecruitmentPageProps> = ({ allEvents, 
     return events;
   }, [selectedProvince, selectedCity, searchTerm, allEvents]);
 
-  const totalPages = Math.ceil(filteredEvents.length / ITEMS_PER_PAGE);
-  const startIndex = (currentPage - 1) * ITEMS_PER_PAGE;
-  const endIndex = startIndex + ITEMS_PER_PAGE;
-  const currentEvents = filteredEvents.slice(startIndex, endIndex);
+  const currentEvents = filteredEvents.slice(0, visibleItems);
+  const hasMore = visibleItems < filteredEvents.length;
 
-  const handlePageChange = (page: number) => {
-    setCurrentPage(page);
-    window.scrollTo({ top: 0, behavior: 'smooth' });
+  const handleLoadMore = () => {
+    setIsLoading(true);
+    setTimeout(() => {
+      setVisibleItems(prev => prev + ITEMS_TO_LOAD);
+      setIsLoading(false);
+    }, 300);
   };
   
   const handleReset = () => {
@@ -119,13 +122,6 @@ const EventRecruitmentPage: React.FC<EventRecruitmentPageProps> = ({ allEvents, 
   return (
     <section className="py-10 px-4 bg-gray-50">
       <div className="container mx-auto">
-        <div className="text-center mb-10">
-          <h1 className="text-3xl md:text-4xl font-bold text-secondary">Event Rekrutmen</h1>
-          <p className="text-gray-600 mt-2 max-w-2xl mx-auto">
-            Temukan job fair, walk-in interview, dan campus hiring terbaru dari berbagai perusahaan terkemuka.
-          </p>
-        </div>
-        
         {/* Filter Section */}
         <div className="bg-white p-4 rounded-lg shadow mb-10">
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 items-end">
@@ -175,11 +171,13 @@ const EventRecruitmentPage: React.FC<EventRecruitmentPageProps> = ({ allEvents, 
                           </div>
                       ))}
                   </div>
-                   <Pagination
-                      currentPage={currentPage}
-                      totalPages={totalPages}
-                      onPageChange={handlePageChange}
-                    />
+                  <LoadMore
+                    hasMore={hasMore}
+                    isLoading={isLoading}
+                    onLoadMore={handleLoadMore}
+                    itemsShown={currentEvents.length}
+                    totalItems={filteredEvents.length}
+                  />
                 </>
               ) : (
                 <div className="text-center py-16 bg-white rounded-lg shadow">

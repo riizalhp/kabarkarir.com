@@ -9,7 +9,7 @@ interface EventDetailPageProps {
   event: RecruitmentEvent;
   onNavigateToBlog: () => void;
   onNavigateToEventRecruitment: () => void;
-  onSelectEvent: (eventId: number) => void;
+  onSelectEvent: (eventSlug: string) => void;
   onSelectCompany: (companySlug: string) => void;
   isPreviewMode?: boolean;
   trendingCompanies: Company[];
@@ -30,7 +30,7 @@ const EventDetailPage: React.FC<EventDetailPageProps> = ({ event, onNavigateToBl
         title: `${event.title} - Event Rekrutmen | KabarKarir.com`,
         description: event.description?.substring(0, 155) || `Event rekrutmen ${event.title} akan diadakan pada ${event.date} di ${event.location}. Jangan lewatkan kesempatan berkarir!`,
         keywords: `event rekrutmen, ${event.title}, ${event.organizer}, ${event.location}, job fair, career fair`,
-        canonical: `https://www.kabarkarir.com/event/${event.id}/${generateSlug(event.title)}`,
+        canonical: `https://www.kabarkarir.com/event/${event.slug || event.id}`,
         ogImage: event.image || 'https://www.kabarkarir.com/og-image.jpg',
         ogType: 'event'
       });

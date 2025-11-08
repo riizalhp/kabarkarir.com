@@ -5,6 +5,7 @@ import Footer from './components/Footer';
 import ToastContainer from './components/ToastContainer';
 import AppRoutes from './AppRoutes';
 import { CATEGORIES } from './constants';
+import { slugify } from './utils/slugify';
 import { Job, BlogPost, MisiCuanOffer, CompanyProfile, RecruitmentEvent, PelatihanInfo, Major, Tag, Category } from './types';
 import { jobsService, companiesService, blogService, eventsService, misiService, pelatihanService, majorsService, tagsService } from './services/api';
 
@@ -77,7 +78,7 @@ const App: React.FC = () => {
           tagsData,
         ] = await Promise.all([
           jobsService.getAll(),
-          companiesService.getAll(),
+          companiesService.getAllSimple(), // Use getAllSimple for backward compatibility
           blogService.getAll(),
           eventsService.getAll(),
           misiService.getAll(),
@@ -238,31 +239,12 @@ const App: React.FC = () => {
       ];
     }
 
-    // Pelatihan routes
-    if (path === '/pelatihan') return [homeCrumb, { name: 'Info Pelatihan' }];
-    if (path.startsWith('/pelatihan/')) {
-      const id = parseInt(path.split('/')[2]);
-      const course = courses.find(c => c.id === id);
-      return [
-        homeCrumb,
-        { name: 'Info Pelatihan', href: '/pelatihan' },
-        { name: course ? course.title : 'Detail Pelatihan' }
-      ];
-    }
-
     // Service routes
-    if (path === '/konsul-karir' || path === '/konsul-karir/ongoing') {
-      return [homeCrumb, { name: 'Konsul Karir' }];
-    }
-    if (path === '/bangun-cv' || path === '/bangun-cv/ongoing') {
-      return [homeCrumb, { name: 'Bangun CV & Review' }];
-    }
     if (path === '/pasang-iklan' || path === '/pasang-iklan/ongoing') {
       return [homeCrumb, { name: 'Pasang Iklan' }];
     }
 
     // Other routes
-    if (path === '/psikotes') return [homeCrumb, { name: 'Psikotes' }];
     if (path === '/favorit') return [homeCrumb, { name: 'Favorit' }];
     if (path === '/komunitas') return [homeCrumb, { name: 'Komunitas' }];
     if (path === '/tentang-kami') return [homeCrumb, { name: 'Tentang Kami' }];
@@ -287,18 +269,6 @@ const App: React.FC = () => {
       case 'misiCuan':
         window.location.href = '/misi-cuan';
         break;
-      case 'konsulKarir':
-        window.location.href = '/konsul-karir';
-        break;
-      case 'konsulKarirOnGoing':
-        window.location.href = '/konsul-karir/ongoing';
-        break;
-      case 'bangunCv':
-        window.location.href = '/bangun-cv';
-        break;
-      case 'bangunCvOnGoing':
-        window.location.href = '/bangun-cv/ongoing';
-        break;
       case 'pasangIklan':
         window.location.href = '/pasang-iklan';
         break;
@@ -308,21 +278,15 @@ const App: React.FC = () => {
       case 'eventRecruitment':
         window.location.href = '/event';
         break;
-      case 'pelatihan':
-        window.location.href = '/pelatihan';
-        break;
       case 'favorites':
         window.location.href = '/favorit';
         break;
       case 'joinTelegram':
         window.location.href = '/komunitas';
         break;
-      case 'psikotest':
-        window.location.href = '/psikotes';
-        break;
       case 'jobCategory':
         if (category) {
-          window.location.href = `/kategori/${encodeURIComponent(category)}`;
+          window.location.href = `/kategori/${slugify(category)}`;
         }
         break;
       default:

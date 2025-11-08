@@ -7,12 +7,12 @@ import { Job, Company, RecruitmentEvent, BlogPost } from '../types';
 
 interface MainContentProps {
   jobs: Job[];
-  onSelectJob: (jobId: number) => void;
+  onSelectJob: (jobSlug: string) => void;
   onSelectCategory: (category: string) => void;
   onSelectCompany: (companySlug: string) => void;
   onNavigateToBlog: () => void;
   onNavigateToEventRecruitment: () => void;
-  onSelectEvent: (eventId: number) => void;
+  onSelectEvent: (eventSlug: string) => void;
   trendingCompanies: Company[];
   latestArticles: BlogPost[];
   allEvents: RecruitmentEvent[];
@@ -20,7 +20,7 @@ interface MainContentProps {
 
 const MainContent: React.FC<MainContentProps> = ({ jobs, onSelectJob, onSelectCategory, onSelectCompany, onNavigateToBlog, onNavigateToEventRecruitment, onSelectEvent, trendingCompanies, latestArticles, allEvents }) => {
   return (
-    <section className="py-10 px-4">
+    <section className="pt-4 pb-10 px-4">
       <div className="container mx-auto">
         <div className="flex flex-col lg:flex-row gap-8">
           <JobListings jobs={jobs} onSelectJob={onSelectJob} onSelectCategory={onSelectCategory} onSelectCompany={onSelectCompany} />

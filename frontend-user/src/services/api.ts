@@ -66,54 +66,82 @@ export const jobsService = {
 // COMPANIES
 // ============================================
 export const companiesService = {
-  // Get all companies
-  getAll: async (): Promise<CompanyProfile[]> => {
-    const { data, error } = await supabase
+  // Get all companies with optional pagination and filtering
+  getAll: async (options?: {
+    type?: 'BUMN' | 'SWASTA' | 'INSTANSI';
+    search?: string;
+    limit?: number;
+    offset?: number;
+  }): Promise<{ data: CompanyProfile[]; total: number }> => {
+    // ✅ Use single query with JOIN aggregation instead of N+1 queries
+    let query = supabase
       .from('companies')
-      .select('*')
-      .order('name', { ascending: true });
+      .select(`
+        *,
+        jobs:jobs(count)
+      `, { count: 'exact' });
+
+    // Filter by type if specified
+    if (options?.type) {
+      query = query.eq('type', options.type);
+    }
+
+    // Search by name if specified
+    if (options?.search) {
+      query = query.ilike('name', `%${options.search}%`);
+    }
+
+    // Apply pagination if specified
+    if (options?.limit !== undefined && options?.offset !== undefined) {
+      query = query.range(options.offset, options.offset + options.limit - 1);
+    }
+
+    query = query.order('name', { ascending: true });
+    
+    const { data, error, count } = await query;
     
     if (error) throw error;
 
-    // Add jobs count for each company
-    const companiesWithCount = await Promise.all(
-      (data || []).map(async (company) => {
-        const { count } = await supabase
-          .from('jobs')
-          .select('*', { count: 'exact', head: true })
-          .eq('company_slug', company.slug)
-          .eq('is_active', true);
-        
-        return {
-          ...company,
-          jobsAvailable: count || 0,
-        };
-      })
-    );
+    // Transform data to include jobsAvailable count
+    const companiesWithCount = (data || []).map((company: any) => {
+      const jobsAvailable = company.jobs?.[0]?.count || 0;
+      const { jobs, ...companyData } = company;
+      return { ...companyData, jobsAvailable };
+    });
     
-    return companiesWithCount as CompanyProfile[];
+    return {
+      data: companiesWithCount as CompanyProfile[],
+      total: count || 0,
+    };
+  },
+
+  // Backward compatibility: Get all without pagination
+  getAllSimple: async (): Promise<CompanyProfile[]> => {
+    const result = await companiesService.getAll();
+    return result.data;
   },
 
   // Get company by slug
   getBySlug: async (slug: string): Promise<CompanyProfile | null> => {
+    // ✅ Use single query with JOIN instead of 2 separate queries
     const { data, error } = await supabase
       .from('companies')
-      .select('*')
+      .select(`
+        *,
+        jobs:jobs(count)
+      `)
       .eq('slug', slug)
       .single();
     
     if (error) throw error;
 
-    // Get jobs count
-    const { count } = await supabase
-      .from('jobs')
-      .select('*', { count: 'exact', head: true })
-      .eq('company_slug', slug)
-      .eq('is_active', true);
+    // Transform data
+    const jobsAvailable = data.jobs?.[0]?.count || 0;
+    const { jobs, ...companyData } = data;
 
     return {
-      ...data,
-      jobsAvailable: count || 0,
+      ...companyData,
+      jobsAvailable,
     } as CompanyProfile;
   },
 };

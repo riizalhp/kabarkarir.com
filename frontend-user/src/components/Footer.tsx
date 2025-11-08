@@ -1,4 +1,5 @@
 import React from 'react';
+import { slugify } from '../utils/slugify';
 
 interface FooterProps {
     onNavigate: (view: 'terms' | 'privacy' | 'help' | 'aboutUs') => void;
@@ -50,7 +51,7 @@ const Footer: React.FC<FooterProps> = ({ onNavigate }) => {
           <div>
             <h4 className="font-semibold mb-4">Kategori Lowongan</h4>
             <ul className="space-y-2 text-gray-300 text-sm">
-              {categoryLinks.map(link => <li key={link}><a href="#" className="text-gray-300 hover:text-primary transition-colors">{link}</a></li>)}
+              {categoryLinks.map(link => <li key={link}><a href={`/kategori/${slugify(link)}`} className="text-gray-300 hover:text-primary transition-colors">{link}</a></li>)}
             </ul>
           </div>
           

@@ -10,11 +10,11 @@ interface JobDetailPageProps {
   job: Job;
   allJobs: Job[];
   onBack: () => void;
-  onSelectJob: (jobId: number) => void;
+  onSelectJob: (jobSlug: string) => void;
   onSelectCategory: (category: string) => void;
   onNavigateToBlog: () => void;
   onNavigateToEventRecruitment: () => void;
-  onSelectEvent: (eventId: number) => void;
+  onSelectEvent: (eventSlug: string) => void;
   onSelectCompany: (companySlug: string) => void;
   isPreviewMode?: boolean;
 }
@@ -31,7 +31,7 @@ const JobDetailPage: React.FC<JobDetailPageProps> = ({ job, allJobs, onBack, onS
         title: `${job.title} - ${job.company} | KabarKarir.com`,
         description: `Lowongan ${job.title} di ${job.company}. ${job.description?.substring(0, 100) || 'Lihat detail lengkap'}... Lokasi: ${job.location}. ${job.type}`,
         keywords: `${job.title}, lowongan ${job.category}, ${job.company}, ${job.location}, ${job.tags?.join(', ')}`,
-        canonical: `https://www.kabarkarir.com/lowongan/${job.id}/${generateSlug(job.title)}`,
+        canonical: `https://www.kabarkarir.com/lowongan/${job.slug}`,
         ogImage: job.logo || 'https://www.kabarkarir.com/og-image.jpg',
         ogType: 'article'
       });

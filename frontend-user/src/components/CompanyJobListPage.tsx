@@ -2,26 +2,27 @@ import React, { useState, useEffect } from 'react';
 import { Job, CompanyProfile, Company, RecruitmentEvent, BlogPost } from '../types';
 import JobCard from './JobCard';
 import Sidebar from './Sidebar';
-import Pagination from './Pagination';
+import LoadMore from './LoadMore';
 
 interface CompanyJobListPageProps {
   companySlug?: string;
   companyPreview?: CompanyProfile;
   allJobs: Job[];
   allCompanies: CompanyProfile[];
-  onSelectJob: (jobId: number) => void;
+  onSelectJob: (jobSlug: string) => void;
   onSelectCategory: (category: string) => void;
   onSelectCompany: (companySlug: string) => void;
   onNavigateToBlog: () => void;
   onNavigateToEventRecruitment: () => void;
-  onSelectEvent: (eventId: number) => void;
+  onSelectEvent: (eventSlug: string) => void;
   trendingCompanies: Company[];
   latestArticles: BlogPost[];
   allEvents: RecruitmentEvent[];
   isPreviewMode?: boolean;
 }
 
-const ITEMS_PER_PAGE = 10;
+const INITIAL_ITEMS = 12;
+const ITEMS_TO_LOAD = 12;
 
 const CompanyJobListPage: React.FC<CompanyJobListPageProps> = ({ companySlug, companyPreview, allJobs, allCompanies, onSelectJob, onSelectCategory, onSelectCompany, onNavigateToBlog, onNavigateToEventRecruitment, onSelectEvent, trendingCompanies, latestArticles, allEvents, isPreviewMode = false }) => {
   const [currentPage, setCurrentPage] = useState(1);
@@ -101,3 +102,5 @@ const CompanyJobListPage: React.FC<CompanyJobListPageProps> = ({ companySlug, co
 };
 
 export default CompanyJobListPage;
+
+

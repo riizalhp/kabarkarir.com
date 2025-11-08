@@ -8,8 +8,6 @@ import JobCategoryPage from './components/JobCategoryPage';
 import CompanyListPage from './components/CompanyListPage';
 import CompanyDetailPage from './components/CompanyDetailPage';
 import MisiCuanPage from './components/MisiCuanPage';
-import KonsulKarirPage from './components/KonsulKarirPage';
-import BangunCVPage from './components/BangunCVPage';
 import PasangIklanPage from './components/PasangIklanPage';
 import MisiDetailPage from './components/MisiDetailPage';
 import MisiStepsPage from './components/MisiStepsPage';
@@ -18,9 +16,6 @@ import JoinTelegramPage from './components/JoinTelegramPage';
 import TermsPage from './components/TermsPage';
 import PrivacyPolicyPage from './components/PrivacyPolicyPage';
 import HelpPage from './components/HelpPage';
-import PsikotestPage from './components/PsikotestPage';
-import KosulKarirOnGoing from './components/KosulKarirOnGoing';
-import BangunCVOnGoing from './components/BangunCVOnGoing';
 import PasangIklanOnGoing from './components/PasangIklanOnGoing';
 import EventRecruitmentPage from './components/EventRecruitmentPage';
 import EventDetailPage from './components/EventDetailPage';
@@ -29,7 +24,7 @@ import PelatihanPage from './components/PelatihanPage';
 import PelatihanDetailPage from './components/PelatihanDetailPage';
 import AboutUsPage from './components/AboutUsPage';
 import Categories from './components/Categories';
-import GoogleAdBanner from './components/GoogleAdBanner';
+import { slugify } from './utils/slugify';
 import { Job, BlogPost, MisiCuanOffer, CompanyProfile, RecruitmentEvent, PelatihanInfo, Major, Tag, Category } from './types';
 
 interface AppRoutesProps {
@@ -63,16 +58,21 @@ const AppRoutes: React.FC<AppRoutesProps> = ({
       {/* Home */}
       <Route path="/" element={
         <>
-          <GoogleAdBanner />
-          <Categories onSelectCategory={(cat) => window.location.href = `/kategori/${encodeURIComponent(cat)}`} categories={dynamicCategories} />
+          <Categories onSelectCategory={(cat) => window.location.href = `/kategori/${slugify(cat)}`} categories={dynamicCategories} />
           <MainContent 
             jobs={jobs} 
-            onSelectJob={(id) => window.location.href = `/lowongan/${id}`}
-            onSelectCategory={(cat) => window.location.href = `/kategori/${encodeURIComponent(cat)}`}
+            onSelectJob={(slug: string) => {
+              const job = jobs.find((j: Job) => j.slug === slug);
+              if (job) window.location.href = `/lowongan/${job.id}/${job.slug}`;
+            }}
+            onSelectCategory={(cat) => window.location.href = `/kategori/${slugify(cat)}`}
             onSelectCompany={(slug) => window.location.href = `/perusahaan/${slug}`}
             onNavigateToBlog={() => window.location.href = '/blog'}
             onNavigateToEventRecruitment={() => window.location.href = '/event'}
-            onSelectEvent={(id) => window.location.href = `/event/${id}`}
+            onSelectEvent={(slug: string) => {
+              const event = events.find((e: RecruitmentEvent) => e.slug === slug);
+              if (event) window.location.href = `/event/${event.id}/${event.slug}`;
+            }}
             trendingCompanies={trendingCompanies}
             latestArticles={blogPosts.slice(0,3)}
             allEvents={events}
@@ -81,11 +81,12 @@ const AppRoutes: React.FC<AppRoutesProps> = ({
       } />
 
       {/* Job Routes */}
-      <Route path="/lowongan/:id" element={<JobDetailWrapper jobs={jobs} blogPosts={blogPosts} events={events} companies={companies} />} />
+      <Route path="/lowongan/:id/:slug" element={<JobDetailWrapper jobs={jobs} blogPosts={blogPosts} events={events} companies={companies} />} />
+      <Route path="/lowongan/:slug" element={<JobDetailWrapper jobs={jobs} blogPosts={blogPosts} events={events} companies={companies} />} />
       <Route path="/kategori/:category" element={<JobCategoryWrapper jobs={jobs} blogPosts={blogPosts} events={events} trendingCompanies={trendingCompanies} />} />
       
       {/* Company Routes */}
-      <Route path="/perusahaan" element={<CompanyListWrapper companies={companiesWithJobCount} blogPosts={blogPosts} events={events} trendingCompanies={trendingCompanies} />} />
+      <Route path="/perusahaan" element={<CompanyListWrapper blogPosts={blogPosts} events={events} trendingCompanies={trendingCompanies} />} />
       <Route path="/perusahaan/:slug" element={<CompanyDetailWrapper companies={companiesWithJobCount} jobs={jobs} blogPosts={blogPosts} events={events} trendingCompanies={trendingCompanies} />} />
       
       {/* Blog Routes */}
@@ -100,6 +101,7 @@ const AppRoutes: React.FC<AppRoutesProps> = ({
       
       {/* Event Routes */}
       <Route path="/event" element={<EventRecruitmentWrapper events={events} blogPosts={blogPosts} trendingCompanies={trendingCompanies} />} />
+      <Route path="/event/:id/:slug" element={<EventDetailWrapper events={events} blogPosts={blogPosts} trendingCompanies={trendingCompanies} companies={companies} />} />
       <Route path="/event/:slug" element={<EventDetailWrapper events={events} blogPosts={blogPosts} trendingCompanies={trendingCompanies} companies={companies} />} />
       
       {/* Pelatihan Routes */}
@@ -107,13 +109,8 @@ const AppRoutes: React.FC<AppRoutesProps> = ({
       <Route path="/pelatihan/:slug" element={<PelatihanDetailWrapper courses={courses} blogPosts={blogPosts} events={events} trendingCompanies={trendingCompanies} />} />
       
       {/* Service Routes */}
-      <Route path="/konsul-karir" element={<KonsulKarirPage />} />
-      <Route path="/konsul-karir/ongoing" element={<KosulKarirOnGoing />} />
-      <Route path="/bangun-cv" element={<BangunCVPage />} />
-      <Route path="/bangun-cv/ongoing" element={<BangunCVOnGoing />} />
       <Route path="/pasang-iklan" element={<PasangIklanPage />} />
       <Route path="/pasang-iklan/ongoing" element={<PasangIklanOnGoing />} />
-      <Route path="/psikotes" element={<PsikotestPage />} />
       
       {/* Other Routes */}
       <Route path="/favorit" element={<FavoritesWrapper jobs={jobs} blogPosts={blogPosts} events={events} trendingCompanies={trendingCompanies} />} />
@@ -131,23 +128,36 @@ const AppRoutes: React.FC<AppRoutesProps> = ({
 
 // Wrapper components for route parameters
 const JobDetailWrapper: React.FC<any> = ({ jobs, blogPosts, events, companies }) => {
-  const { id } = useParams<{ id: string }>();
-  const selectedJob = jobs.find((job: Job) => job.id === Number(id));
+  const { id, slug } = useParams<{ id: string; slug: string }>();
+  
+  // Find by ID first (primary), slug is just for SEO
+  let selectedJob = jobs.find((job: Job) => job.id === Number(id));
+  
+  // Fallback: if no ID match, try slug for backward compatibility
+  if (!selectedJob && slug) {
+    selectedJob = jobs.find((job: Job) => job.slug === slug);
+  }
   
   if (!selectedJob) return <div className="container mx-auto px-4 py-8"><h2>Lowongan tidak ditemukan</h2></div>;
   
   return (
     <JobDetailPage 
       job={selectedJob} 
-      allJobs={jobs} 
-      onBack={() => window.history.back()}
-      onSelectJob={(jobId) => window.location.href = `/lowongan/${jobId}`}
-      onSelectCategory={(cat) => window.location.href = `/kategori/${encodeURIComponent(cat)}`}
-      onNavigateToBlog={() => window.location.href = '/blog'}
-      onNavigateToEventRecruitment={() => window.location.href = '/event'}
-      onSelectEvent={(eventId) => window.location.href = `/event/${eventId}`}
-      onSelectCompany={(slug) => window.location.href = `/perusahaan/${slug}`}
-    />
+        allJobs={jobs} 
+        onBack={() => window.history.back()}
+        onSelectJob={(jobSlug: string) => {
+          const job = jobs.find((j: Job) => j.slug === jobSlug);
+          if (job) window.location.href = `/lowongan/${job.id}/${job.slug}`;
+        }}
+        onSelectCategory={(cat) => window.location.href = `/kategori/${slugify(cat)}`}
+        onNavigateToBlog={() => window.location.href = '/blog'}
+        onNavigateToEventRecruitment={() => window.location.href = '/event'}
+        onSelectEvent={(eventSlug: string) => {
+          const event = events.find((e: RecruitmentEvent) => e.slug === eventSlug);
+          if (event) window.location.href = `/event/${event.id}/${event.slug}`;
+        }}
+        onSelectCompany={(slug) => window.location.href = `/perusahaan/${slug}`}
+      />
   );
 };
 
@@ -159,12 +169,18 @@ const JobCategoryWrapper: React.FC<any> = ({ jobs, blogPosts, events, trendingCo
     <JobCategoryPage 
       category={decodedCategory}
       allJobs={jobs}
-      onSelectJob={(id) => window.location.href = `/lowongan/${id}`}
-      onSelectCategory={(cat) => window.location.href = `/kategori/${encodeURIComponent(cat)}`}
+      onSelectJob={(slug: string) => {
+        const job = jobs.find((j: Job) => j.slug === slug);
+        if (job) window.location.href = `/lowongan/${job.id}/${job.slug}`;
+      }}
+      onSelectCategory={(cat) => window.location.href = `/kategori/${slugify(cat)}`}
       onSelectCompany={(slug) => window.location.href = `/perusahaan/${slug}`}
       onNavigateToBlog={() => window.location.href = '/blog'}
       onNavigateToEventRecruitment={() => window.location.href = '/event'}
-      onSelectEvent={(id) => window.location.href = `/event/${id}`}
+      onSelectEvent={(slug: string) => {
+        const event = events.find((e: RecruitmentEvent) => e.slug === slug);
+        if (event) window.location.href = `/event/${event.id}/${event.slug}`;
+      }}
       trendingCompanies={trendingCompanies}
       latestArticles={blogPosts.slice(0,3)}
       allEvents={events}
@@ -172,14 +188,16 @@ const JobCategoryWrapper: React.FC<any> = ({ jobs, blogPosts, events, trendingCo
   );
 };
 
-const CompanyListWrapper: React.FC<any> = ({ companies, blogPosts, events, trendingCompanies }) => {
+const CompanyListWrapper: React.FC<any> = ({ blogPosts, events, trendingCompanies }) => {
   return (
     <CompanyListPage 
-      companies={companies}
       onSelectCompany={(slug) => window.location.href = `/perusahaan/${slug}`}
       onNavigateToBlog={() => window.location.href = '/blog'}
       onNavigateToEventRecruitment={() => window.location.href = '/event'}
-      onSelectEvent={(id) => window.location.href = `/event/${id}`}
+      onSelectEvent={(slug: string) => {
+        const event = events.find((e: RecruitmentEvent) => e.slug === slug);
+        if (event) window.location.href = `/event/${event.id}/${event.slug}`;
+      }}
       trendingCompanies={trendingCompanies}
       latestArticles={blogPosts.slice(0,3)}
       allEvents={events}
@@ -195,12 +213,18 @@ const CompanyDetailWrapper: React.FC<any> = ({ companies, jobs, blogPosts, event
       companySlug={slug || ''}
       allJobs={jobs}
       allCompanies={companies}
-      onSelectJob={(id) => window.location.href = `/lowongan/${id}`}
-      onSelectCategory={(cat) => window.location.href = `/kategori/${encodeURIComponent(cat)}`}
+      onSelectJob={(jobSlug: string) => {
+        const job = jobs.find((j: Job) => j.slug === jobSlug);
+        if (job) window.location.href = `/lowongan/${job.id}/${job.slug}`;
+      }}
+      onSelectCategory={(cat) => window.location.href = `/kategori/${slugify(cat)}`}
       onSelectCompany={(companySlug) => window.location.href = `/perusahaan/${companySlug}`}
       onNavigateToBlog={() => window.location.href = '/blog'}
       onNavigateToEventRecruitment={() => window.location.href = '/event'}
-      onSelectEvent={(id) => window.location.href = `/event/${id}`}
+      onSelectEvent={(eventSlug: string) => {
+        const event = events.find((e: RecruitmentEvent) => e.slug === eventSlug);
+        if (event) window.location.href = `/event/${event.id}/${event.slug}`;
+      }}
       trendingCompanies={trendingCompanies}
       latestArticles={blogPosts.slice(0,3)}
       allEvents={events}
@@ -212,10 +236,13 @@ const BlogWrapper: React.FC<any> = ({ blogPosts, events, trendingCompanies }) =>
   return (
     <BlogPage 
       posts={blogPosts}
-      onSelectArticle={(id) => window.location.href = `/blog/${id}`}
+      onSelectArticle={(slug) => window.location.href = `/blog/${slug}`}
       onNavigateToBlog={() => window.location.href = '/blog'}
       onNavigateToEventRecruitment={() => window.location.href = '/event'}
-      onSelectEvent={(id) => window.location.href = `/event/${id}`}
+      onSelectEvent={(slug: string) => {
+        const event = events.find((e: RecruitmentEvent) => e.slug === slug);
+        if (event) window.location.href = `/event/${event.id}/${event.slug}`;
+      }}
       trendingCompanies={trendingCompanies}
       latestArticles={blogPosts.slice(0,3)}
       allEvents={events}
@@ -239,7 +266,10 @@ const ArticleDetailWrapper: React.FC<any> = ({ blogPosts, events, trendingCompan
       post={selectedArticle}
       onNavigateToBlog={() => window.location.href = '/blog'}
       onNavigateToEventRecruitment={() => window.location.href = '/event'}
-      onSelectEvent={(id) => window.location.href = `/event/${id}`}
+      onSelectEvent={(slug: string) => {
+        const event = events.find((e: RecruitmentEvent) => e.slug === slug);
+        if (event) window.location.href = `/event/${event.id}/${event.slug}`;
+      }}
       trendingCompanies={trendingCompanies}
       latestArticles={blogPosts.slice(0,3)}
       allEvents={events}
@@ -254,7 +284,10 @@ const MisiCuanWrapper: React.FC<any> = ({ misiOffers, blogPosts, events, trendin
       onSelectMisi={(id) => window.location.href = `/misi-cuan/${id}`}
       onNavigateToBlog={() => window.location.href = '/blog'}
       onNavigateToEventRecruitment={() => window.location.href = '/event'}
-      onSelectEvent={(id) => window.location.href = `/event/${id}`}
+      onSelectEvent={(slug: string) => {
+        const event = events.find((e: RecruitmentEvent) => e.slug === slug);
+        if (event) window.location.href = `/event/${event.id}/${event.slug}`;
+      }}
       trendingCompanies={trendingCompanies}
       latestArticles={blogPosts.slice(0,3)}
       allEvents={events}
@@ -279,7 +312,10 @@ const MisiDetailWrapper: React.FC<any> = ({ misiOffers, blogPosts, events, trend
       onStart={(misiId) => window.location.href = `/misi-cuan/${misiId}/tahapan`}
       onNavigateToBlog={() => window.location.href = '/blog'}
       onNavigateToEventRecruitment={() => window.location.href = '/event'}
-      onSelectEvent={(id) => window.location.href = `/event/${id}`}
+      onSelectEvent={(slug: string) => {
+        const event = events.find((e: RecruitmentEvent) => e.slug === slug);
+        if (event) window.location.href = `/event/${event.id}/${event.slug}`;
+      }}
       trendingCompanies={trendingCompanies}
       latestArticles={blogPosts.slice(0,3)}
       allEvents={events}
@@ -335,7 +371,10 @@ const EventRecruitmentWrapper: React.FC<any> = ({ events, blogPosts, trendingCom
       allEvents={events}
       onNavigateToBlog={() => window.location.href = '/blog'}
       onNavigateToEventRecruitment={() => window.location.href = '/event'}
-      onSelectEvent={(id) => window.location.href = `/event/${id}`}
+      onSelectEvent={(slug: string) => {
+        const event = events.find((e: RecruitmentEvent) => e.slug === slug);
+        if (event) window.location.href = `/event/${event.id}/${event.slug}`;
+      }}
       trendingCompanies={trendingCompanies}
       latestArticles={blogPosts.slice(0,3)}
     />
@@ -343,10 +382,17 @@ const EventRecruitmentWrapper: React.FC<any> = ({ events, blogPosts, trendingCom
 };
 
 const EventDetailWrapper: React.FC<any> = ({ events, blogPosts, trendingCompanies, companies }) => {
-  const { slug } = useParams<{ slug: string }>();
+  const { id, slug } = useParams<{ id: string; slug: string }>();
   
-  // Try to find by slug first, then by ID for backwards compatibility
-  let selectedEvent = events.find((event: RecruitmentEvent) => event.slug === slug);
+  // Find by ID first (primary), slug is just for SEO
+  let selectedEvent = events.find((event: RecruitmentEvent) => event.id === Number(id));
+  
+  // Fallback: if no ID match, try slug for backward compatibility
+  if (!selectedEvent && slug) {
+    selectedEvent = events.find((event: RecruitmentEvent) => event.slug === slug);
+  }
+  
+  // Additional fallback: try ID from slug parameter (old format)
   if (!selectedEvent && !isNaN(Number(slug))) {
     selectedEvent = events.find((event: RecruitmentEvent) => event.id === Number(slug));
   }
@@ -358,7 +404,10 @@ const EventDetailWrapper: React.FC<any> = ({ events, blogPosts, trendingCompanie
       event={selectedEvent}
       onNavigateToBlog={() => window.location.href = '/blog'}
       onNavigateToEventRecruitment={() => window.location.href = '/event'}
-      onSelectEvent={(eventId) => window.location.href = `/event/${eventId}`}
+      onSelectEvent={(eventSlug: string) => {
+        const event = events.find((e: RecruitmentEvent) => e.slug === eventSlug);
+        if (event) window.location.href = `/event/${event.id}/${event.slug}`;
+      }}
       trendingCompanies={trendingCompanies}
       latestArticles={blogPosts.slice(0,3)}
       allEvents={events}
@@ -374,7 +423,10 @@ const PelatihanWrapper: React.FC<any> = ({ courses, blogPosts, events, trendingC
       onSelectPelatihan={(id) => window.location.href = `/pelatihan/${id}`}
       onNavigateToBlog={() => window.location.href = '/blog'}
       onNavigateToEventRecruitment={() => window.location.href = '/event'}
-      onSelectEvent={(id) => window.location.href = `/event/${id}`}
+      onSelectEvent={(slug: string) => {
+        const event = events.find((e: RecruitmentEvent) => e.slug === slug);
+        if (event) window.location.href = `/event/${event.id}/${event.slug}`;
+      }}
       trendingCompanies={trendingCompanies}
       latestArticles={blogPosts.slice(0,3)}
       allEvents={events}
@@ -398,7 +450,10 @@ const PelatihanDetailWrapper: React.FC<any> = ({ courses, blogPosts, events, tre
       pelatihan={selectedPelatihan}
       onNavigateToBlog={() => window.location.href = '/blog'}
       onNavigateToEventRecruitment={() => window.location.href = '/event'}
-      onSelectEvent={(id) => window.location.href = `/event/${id}`}
+      onSelectEvent={(slug: string) => {
+        const event = events.find((e: RecruitmentEvent) => e.slug === slug);
+        if (event) window.location.href = `/event/${event.id}/${event.slug}`;
+      }}
       trendingCompanies={trendingCompanies}
       latestArticles={blogPosts.slice(0,3)}
       allEvents={events}
@@ -410,12 +465,18 @@ const FavoritesWrapper: React.FC<any> = ({ jobs, blogPosts, events, trendingComp
   return (
     <FavoritesPage 
       allJobs={jobs}
-      onSelectJob={(id) => window.location.href = `/lowongan/${id}`}
-      onSelectCategory={(cat) => window.location.href = `/kategori/${encodeURIComponent(cat)}`}
+      onSelectJob={(jobSlug: string) => {
+        const job = jobs.find((j: Job) => j.slug === jobSlug);
+        if (job) window.location.href = `/lowongan/${job.id}/${job.slug}`;
+      }}
+      onSelectCategory={(cat) => window.location.href = `/kategori/${slugify(cat)}`}
       onSelectCompany={(slug) => window.location.href = `/perusahaan/${slug}`}
       onNavigateToBlog={() => window.location.href = '/blog'}
       onNavigateToEventRecruitment={() => window.location.href = '/event'}
-      onSelectEvent={(id) => window.location.href = `/event/${id}`}
+      onSelectEvent={(slug: string) => {
+        const event = events.find((e: RecruitmentEvent) => e.slug === slug);
+        if (event) window.location.href = `/event/${event.id}/${event.slug}`;
+      }}
       trendingCompanies={trendingCompanies}
       latestArticles={blogPosts.slice(0,3)}
       allEvents={events}

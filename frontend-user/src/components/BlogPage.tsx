@@ -1,22 +1,24 @@
 import React, { useState, useMemo, useEffect } from 'react';
 import { BlogPost, Company, RecruitmentEvent } from '../types';
 import Sidebar from './Sidebar';
-import Pagination from './Pagination';
+import LoadMore from './LoadMore';
+import AdCard from './AdCard';
 
 interface BlogPageProps {
   posts: BlogPost[];
-  onSelectArticle: (articleId: number) => void;
+  onSelectArticle: (articleSlug: string) => void;
   onNavigateToBlog: () => void;
   onNavigateToEventRecruitment: () => void;
-  onSelectEvent: (eventId: number) => void;
+  onSelectEvent: (eventSlug: string) => void;
   trendingCompanies: Company[];
   latestArticles: BlogPost[];
   allEvents: RecruitmentEvent[];
 }
 
-const ITEMS_PER_PAGE = 6;
+const INITIAL_ITEMS = 6;
+const ITEMS_TO_LOAD = 6;
 
-const ArticleCard: React.FC<{ post: BlogPost; onSelectArticle: (id: number) => void }> = ({ post, onSelectArticle }) => {
+const ArticleCard: React.FC<{ post: BlogPost; onSelectArticle: (slug: string) => void }> = ({ post, onSelectArticle }) => {
   const badgeColorClasses = {
     blue: 'bg-blue-100 text-primary',
     green: 'bg-green-100 text-green-700',
@@ -25,16 +27,16 @@ const ArticleCard: React.FC<{ post: BlogPost; onSelectArticle: (id: number) => v
 
   return (
     <div className="bg-white rounded-lg shadow overflow-hidden transition duration-300 hover:shadow-xl hover:-translate-y-1 flex flex-col">
-      <div onClick={() => onSelectArticle(post.id)} className="h-48 overflow-hidden cursor-pointer">
+      <div onClick={() => onSelectArticle(post.slug || String(post.id))} className="h-48 overflow-hidden cursor-pointer">
         <img src={post.image} alt={post.title} className="w-full h-full object-cover hover:scale-105 transition duration-500" />
       </div>
       <div className="p-5 flex flex-col flex-grow">
         <span className={`self-start text-xs font-medium px-2 py-1 rounded-full ${badgeColorClasses[post.categoryColor]}`}>{post.category}</span>
-        <h3 onClick={() => onSelectArticle(post.id)} className="font-semibold text-secondary mt-3 h-12 text-ellipsis overflow-hidden cursor-pointer hover:text-primary">{post.title}</h3>
+        <h3 onClick={() => onSelectArticle(post.slug || String(post.id))} className="font-semibold text-secondary mt-3 h-12 text-ellipsis overflow-hidden cursor-pointer hover:text-primary">{post.title}</h3>
         <p className="text-sm text-gray-600 mt-2 mb-4 flex-grow text-truncate-2">{post.description}</p>
         <div className="flex justify-between items-center mt-auto">
           <span className="text-xs text-gray-500">{post.posted}</span>
-          <button onClick={() => onSelectArticle(post.id)} className="text-secondary text-sm font-medium hover:text-primary">
+          <button onClick={() => onSelectArticle(post.slug || String(post.id))} className="text-secondary text-sm font-medium hover:text-primary">
             Baca Selengkapnya
           </button>
         </div>
@@ -44,9 +46,10 @@ const ArticleCard: React.FC<{ post: BlogPost; onSelectArticle: (id: number) => v
 };
 
 const BlogPage: React.FC<BlogPageProps> = ({ posts, onSelectArticle, onNavigateToBlog, onNavigateToEventRecruitment, onSelectEvent, trendingCompanies, latestArticles, allEvents }) => {
-  const [currentPage, setCurrentPage] = useState(1);
+  const [visibleItems, setVisibleItems] = useState(INITIAL_ITEMS);
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedCategory, setSelectedCategory] = useState('Semua');
+  const [isLoading, setIsLoading] = useState(false);
 
   const uniqueCategories = useMemo(() => {
     const categories = new Set(posts.map(p => p.category));
@@ -54,7 +57,7 @@ const BlogPage: React.FC<BlogPageProps> = ({ posts, onSelectArticle, onNavigateT
   }, [posts]);
 
   useEffect(() => {
-    setCurrentPage(1);
+    setVisibleItems(INITIAL_ITEMS);
   }, [searchTerm, selectedCategory]);
   
   const filteredPosts = useMemo(() => {
@@ -67,24 +70,21 @@ const BlogPage: React.FC<BlogPageProps> = ({ posts, onSelectArticle, onNavigateT
     });
   }, [posts, searchTerm, selectedCategory]);
 
-  const totalPages = Math.ceil(filteredPosts.length / ITEMS_PER_PAGE);
-  const startIndex = (currentPage - 1) * ITEMS_PER_PAGE;
-  const endIndex = startIndex + ITEMS_PER_PAGE;
-  const currentPosts = filteredPosts.slice(startIndex, endIndex);
+  const currentPosts = filteredPosts.slice(0, visibleItems);
+  const hasMore = visibleItems < filteredPosts.length;
 
-  const handlePageChange = (page: number) => {
-    setCurrentPage(page);
-    window.scrollTo({ top: 0, behavior: 'smooth' });
+  const handleLoadMore = () => {
+    setIsLoading(true);
+    // Simulate loading delay for better UX
+    setTimeout(() => {
+      setVisibleItems(prev => prev + ITEMS_TO_LOAD);
+      setIsLoading(false);
+    }, 300);
   };
 
   return (
     <section className="py-10 px-4">
       <div className="container mx-auto">
-        <div className="text-center mb-10">
-          <h1 className="text-3xl md:text-4xl font-bold text-secondary">Artikel & Berita Terbaru</h1>
-          <p className="text-gray-600 mt-2">Dapatkan wawasan terbaru seputar dunia karir, tips, dan berita ketenagakerjaan.</p>
-        </div>
-
         {/* Filter Bar */}
         <div className="bg-white p-4 rounded-lg shadow-md mb-8">
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
@@ -121,14 +121,22 @@ const BlogPage: React.FC<BlogPageProps> = ({ posts, onSelectArticle, onNavigateT
               {currentPosts.length > 0 ? (
                 <>
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                    {currentPosts.map(post => (
-                      <ArticleCard key={post.id} post={post} onSelectArticle={onSelectArticle} />
+                    {currentPosts.map((post, index) => (
+                      <React.Fragment key={post.id}>
+                        <ArticleCard post={post} onSelectArticle={onSelectArticle} />
+                        {/* Insert ad after every 4 articles */}
+                        {(index + 1) % 4 === 0 && index !== currentPosts.length - 1 && (
+                          <AdCard className="md:col-span-2" type="banner" />
+                        )}
+                      </React.Fragment>
                     ))}
                   </div>
-                  <Pagination
-                    currentPage={currentPage}
-                    totalPages={totalPages}
-                    onPageChange={handlePageChange}
+                  <LoadMore
+                    hasMore={hasMore}
+                    isLoading={isLoading}
+                    onLoadMore={handleLoadMore}
+                    itemsShown={currentPosts.length}
+                    totalItems={filteredPosts.length}
                   />
                 </>
               ) : (

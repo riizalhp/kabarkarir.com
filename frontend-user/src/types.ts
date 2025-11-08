@@ -28,6 +28,7 @@ export interface CompanyProfile {
 
 export interface Job {
   id: number;
+  slug: string;
   title: string;
   company: string;
   companySlug: string;

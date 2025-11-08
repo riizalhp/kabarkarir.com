@@ -2,27 +2,29 @@ import React, { useState, useMemo, useEffect } from 'react';
 import { MisiCuanOffer, Company, RecruitmentEvent, BlogPost } from '../types';
 import OfferCard from './OfferCard';
 import Sidebar from './Sidebar';
-import Pagination from './Pagination';
+import LoadMore from './LoadMore';
 
 interface MisiCuanPageProps {
   offers: MisiCuanOffer[];
   onSelectMisi: (offerId: number) => void;
   onNavigateToBlog: () => void;
   onNavigateToEventRecruitment: () => void;
-  onSelectEvent: (eventId: number) => void;
+  onSelectEvent: (eventSlug: string) => void;
   trendingCompanies: Company[];
   latestArticles: BlogPost[];
   allEvents: RecruitmentEvent[];
 }
 
-const ITEMS_PER_PAGE = 4;
+const INITIAL_ITEMS = 4;
+const ITEMS_TO_LOAD = 4;
 
 const MisiCuanPage: React.FC<MisiCuanPageProps> = ({ offers, onSelectMisi, onNavigateToBlog, onNavigateToEventRecruitment, onSelectEvent, trendingCompanies, latestArticles, allEvents }) => {
-  const [currentPage, setCurrentPage] = useState(1);
+  const [visibleItems, setVisibleItems] = useState(INITIAL_ITEMS);
   const [searchTerm, setSearchTerm] = useState('');
+  const [isLoading, setIsLoading] = useState(false);
 
   useEffect(() => {
-    setCurrentPage(1);
+    setVisibleItems(INITIAL_ITEMS);
   }, [searchTerm]);
 
   const filteredOffers = useMemo(() => {
@@ -33,28 +35,20 @@ const MisiCuanPage: React.FC<MisiCuanPageProps> = ({ offers, onSelectMisi, onNav
     );
   }, [offers, searchTerm]);
 
-  const totalPages = Math.ceil(filteredOffers.length / ITEMS_PER_PAGE);
-  const startIndex = (currentPage - 1) * ITEMS_PER_PAGE;
-  const endIndex = startIndex + ITEMS_PER_PAGE;
-  const currentOffers = filteredOffers.slice(startIndex, endIndex);
+  const currentOffers = filteredOffers.slice(0, visibleItems);
+  const hasMore = visibleItems < filteredOffers.length;
 
-  const handlePageChange = (page: number) => {
-    setCurrentPage(page);
-    window.scrollTo({ top: 0, behavior: 'smooth' });
+  const handleLoadMore = () => {
+    setIsLoading(true);
+    setTimeout(() => {
+      setVisibleItems(prev => prev + ITEMS_TO_LOAD);
+      setIsLoading(false);
+    }, 300);
   };
   
   return (
     <section className="py-10 px-4 bg-gray-50">
       <div className="container mx-auto">
-        <div className="text-center mb-10">
-          <h1 className="text-3xl md:text-4xl font-bold text-secondary">
-            Misi Cuan
-          </h1>
-          <p className="text-gray-600 mt-2 max-w-2xl mx-auto">
-            Selesaikan misi mudah dari partner kami dan dapatkan imbalan menarik. Cuan ekstra menantimu!
-          </p>
-        </div>
-
         {/* Search Bar */}
         <div className="max-w-2xl mx-auto mb-8">
             <div className="relative">
@@ -77,10 +71,12 @@ const MisiCuanPage: React.FC<MisiCuanPageProps> = ({ offers, onSelectMisi, onNav
                       {currentOffers.map(offer => (
                           <OfferCard key={offer.id} offer={offer} onSelectMisi={onSelectMisi} />
                       ))}
-                      <Pagination
-                        currentPage={currentPage}
-                        totalPages={totalPages}
-                        onPageChange={handlePageChange}
+                      <LoadMore
+                        hasMore={hasMore}
+                        isLoading={isLoading}
+                        onLoadMore={handleLoadMore}
+                        itemsShown={currentOffers.length}
+                        totalItems={filteredOffers.length}
                       />
                     </>
                 ) : (

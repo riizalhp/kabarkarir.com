@@ -1,7 +1,7 @@
 import React, { useState, useMemo, useEffect } from 'react';
 import { PelatihanInfo, Company, RecruitmentEvent, BlogPost } from '../types';
 import Sidebar from './Sidebar';
-import Pagination from './Pagination';
+import LoadMore from './LoadMore';
 import { toast } from '../utils/toast';
 import { isPelatihanFavorite, addFavoritePelatihan, removeFavoritePelatihan } from '../utils/favorites';
 
@@ -11,13 +11,14 @@ interface PelatihanPageProps {
   onSelectPelatihan: (pelatihanId: number) => void;
   onNavigateToBlog: () => void;
   onNavigateToEventRecruitment: () => void;
-  onSelectEvent: (eventId: number) => void;
+  onSelectEvent: (eventSlug: string) => void;
   trendingCompanies: Company[];
   latestArticles: BlogPost[];
   allEvents: RecruitmentEvent[];
 }
 
-const ITEMS_PER_PAGE = 5;
+const INITIAL_ITEMS = 5;
+const ITEMS_TO_LOAD = 5;
 
 const PelatihanCard: React.FC<{ pelatihan: PelatihanInfo; onSelectPelatihan: (id: number) => void; }> = ({ pelatihan, onSelectPelatihan }) => {
     const [isFavorite, setIsFavorite] = useState(isPelatihanFavorite(pelatihan.id));
@@ -73,9 +74,10 @@ const PelatihanCard: React.FC<{ pelatihan: PelatihanInfo; onSelectPelatihan: (id
 
 
 const PelatihanPage: React.FC<PelatihanPageProps> = ({ pelatihanList, onSelectPelatihan, onNavigateToBlog, onNavigateToEventRecruitment, onSelectEvent, trendingCompanies, latestArticles, allEvents }) => {
-    const [currentPage, setCurrentPage] = useState(1);
+    const [visibleItems, setVisibleItems] = useState(INITIAL_ITEMS);
     const [searchTerm, setSearchTerm] = useState('');
     const [selectedCategory, setSelectedCategory] = useState('Semua');
+    const [isLoading, setIsLoading] = useState(false);
     
     const uniqueCategories = useMemo(() => {
         const categories = new Set(pelatihanList.map(p => p.category));
@@ -83,7 +85,7 @@ const PelatihanPage: React.FC<PelatihanPageProps> = ({ pelatihanList, onSelectPe
     }, [pelatihanList]);
 
     useEffect(() => {
-        setCurrentPage(1);
+        setVisibleItems(INITIAL_ITEMS);
     }, [searchTerm, selectedCategory]);
 
     const filteredPelatihan = useMemo(() => {
@@ -97,25 +99,19 @@ const PelatihanPage: React.FC<PelatihanPageProps> = ({ pelatihanList, onSelectPe
         });
     }, [pelatihanList, searchTerm, selectedCategory]);
     
-    const totalPages = Math.ceil(filteredPelatihan.length / ITEMS_PER_PAGE);
-    const currentPelatihan = filteredPelatihan.slice((currentPage - 1) * ITEMS_PER_PAGE, currentPage * ITEMS_PER_PAGE);
+    const currentPelatihan = filteredPelatihan.slice(0, visibleItems);
+    const hasMore = visibleItems < filteredPelatihan.length;
     
-    const handlePageChange = (page: number) => {
-        setCurrentPage(page);
-        window.scrollTo({ top: 0, behavior: 'smooth' });
+    const handleLoadMore = () => {
+        setIsLoading(true);
+        setTimeout(() => {
+            setVisibleItems(prev => prev + ITEMS_TO_LOAD);
+            setIsLoading(false);
+        }, 300);
     };
 
     return (
         <div className="bg-gray-50">
-            <section className="bg-white py-20 px-4 text-center">
-                <div className="container mx-auto">
-                    <h1 className="text-4xl md:text-5xl font-bold text-secondary">Info Pelatihan & Sertifikasi</h1>
-                    <p className="mt-4 text-lg max-w-3xl mx-auto text-gray-600">
-                        Tingkatkan kompetensi dan daya saing Anda dengan mengikuti berbagai pelatihan dan program sertifikasi yang relevan dengan kebutuhan industri saat ini.
-                    </p>
-                </div>
-            </section>
-            
             <section className="py-10 px-4">
                 <div className="container mx-auto">
                     {/* Filter Bar */}
@@ -159,10 +155,12 @@ const PelatihanPage: React.FC<PelatihanPageProps> = ({ pelatihanList, onSelectPe
                                                 <PelatihanCard key={pelatihan.id} pelatihan={pelatihan} onSelectPelatihan={onSelectPelatihan} />
                                             ))}
                                         </div>
-                                        <Pagination
-                                            currentPage={currentPage}
-                                            totalPages={totalPages}
-                                            onPageChange={handlePageChange}
+                                        <LoadMore
+                                            hasMore={hasMore}
+                                            isLoading={isLoading}
+                                            onLoadMore={handleLoadMore}
+                                            itemsShown={currentPelatihan.length}
+                                            totalItems={filteredPelatihan.length}
                                         />
                                     </>
                                 ) : (

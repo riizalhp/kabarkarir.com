@@ -1,28 +1,31 @@
 import React, { useState } from 'react';
 import { Job } from '../types';
 import JobCard from './JobCard';
-import Pagination from './Pagination';
+import LoadMore from './LoadMore';
 
 interface JobListingsProps {
   jobs: Job[];
-  onSelectJob: (jobId: number) => void;
+  onSelectJob: (jobSlug: string) => void;
   onSelectCategory: (category: string) => void;
   onSelectCompany: (companySlug: string) => void;
 }
 
-const ITEMS_PER_PAGE = 10;
+const INITIAL_ITEMS = 10;
+const ITEMS_TO_LOAD = 10;
 
 const JobListings: React.FC<JobListingsProps> = ({ jobs, onSelectJob, onSelectCategory, onSelectCompany }) => {
-  const [currentPage, setCurrentPage] = useState(1);
+  const [visibleItems, setVisibleItems] = useState(INITIAL_ITEMS);
+  const [isLoading, setIsLoading] = useState(false);
 
-  const totalPages = Math.ceil(jobs.length / ITEMS_PER_PAGE);
-  const startIndex = (currentPage - 1) * ITEMS_PER_PAGE;
-  const endIndex = startIndex + ITEMS_PER_PAGE;
-  const currentJobs = jobs.slice(startIndex, endIndex);
+  const currentJobs = jobs.slice(0, visibleItems);
+  const hasMore = visibleItems < jobs.length;
 
-  const handlePageChange = (page: number) => {
-    setCurrentPage(page);
-    // This component is part of a larger page, so we don't scroll the whole window to top
+  const handleLoadMore = () => {
+    setIsLoading(true);
+    setTimeout(() => {
+      setVisibleItems(prev => prev + ITEMS_TO_LOAD);
+      setIsLoading(false);
+    }, 300);
   };
 
 
@@ -47,10 +50,12 @@ const JobListings: React.FC<JobListingsProps> = ({ jobs, onSelectJob, onSelectCa
         ))}
       </div>
       
-      <Pagination 
-        currentPage={currentPage}
-        totalPages={totalPages}
-        onPageChange={handlePageChange}
+      <LoadMore
+        hasMore={hasMore}
+        isLoading={isLoading}
+        onLoadMore={handleLoadMore}
+        itemsShown={currentJobs.length}
+        totalItems={jobs.length}
       />
 
     </div>

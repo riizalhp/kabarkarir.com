@@ -6,12 +6,12 @@ import Sidebar from './Sidebar';
 
 interface FavoritesPageProps {
   allJobs: Job[];
-  onSelectJob: (jobId: number) => void;
+  onSelectJob: (jobSlug: string) => void;
   onSelectCategory: (category: string) => void;
   onSelectCompany: (companySlug: string) => void;
   onNavigateToBlog: () => void;
   onNavigateToEventRecruitment: () => void;
-  onSelectEvent: (eventId: number) => void;
+  onSelectEvent: (eventSlug: string) => void;
   trendingCompanies: Company[];
   latestArticles: BlogPost[];
   allEvents: RecruitmentEvent[];
@@ -33,10 +33,6 @@ const FavoritesPage: React.FC<FavoritesPageProps> = ({ allJobs, onSelectJob, onS
   return (
     <section className="py-10 px-4">
       <div className="container mx-auto">
-        <div className="text-center mb-10">
-          <h1 className="text-3xl md:text-4xl font-bold text-secondary">Lowongan Favorit Anda</h1>
-          <p className="text-gray-600 mt-2">Daftar pekerjaan yang telah Anda simpan.</p>
-        </div>
         <div className="flex flex-col lg:flex-row gap-8">
             <div className="w-full lg:w-2/3">
                 {favoriteJobs.length > 0 ? (

@@ -1,9 +1,10 @@
 import React, { useState, useEffect } from 'react';
 import { NAV_LINKS } from '../constants';
 import { NavLink } from '../types';
+import { slugify } from '../utils/slugify';
 
 interface HeaderProps {
-  onNavigate: (view: 'home' | 'blog' | 'jobCategory' | 'companyList' | 'misiCuan' | 'konsulKarir' | 'bangunCv' | 'pasangIklan' | 'joinTelegram' | 'konsulKarirOnGoing' | 'bangunCvOnGoing' | 'pasangIklanOnGoing' | 'eventRecruitment' | 'favorites' | 'pelatihan' | 'psikotest', category?: string) => void;
+  onNavigate: (view: 'home' | 'blog' | 'jobCategory' | 'companyList' | 'misiCuan' | 'pasangIklan' | 'joinTelegram' | 'pasangIklanOnGoing' | 'eventRecruitment' | 'favorites', category?: string) => void;
 }
 
 const Header: React.FC<HeaderProps> = ({ onNavigate }) => {
@@ -27,7 +28,7 @@ const Header: React.FC<HeaderProps> = ({ onNavigate }) => {
     }
   };
   
- const handleNavClick = (e: React.MouseEvent, view: 'home' | 'blog' | 'jobCategory' | 'companyList' | 'misiCuan' | 'konsulKarir' | 'bangunCv' | 'pasangIklan' | 'joinTelegram' | 'konsulKarirOnGoing' | 'bangunCvOnGoing' | 'pasangIklanOnGoing' | 'eventRecruitment' | 'favorites' | 'pelatihan' | 'psikotest', data?: string) => {
+ const handleNavClick = (e: React.MouseEvent, view: 'home' | 'blog' | 'jobCategory' | 'companyList' | 'misiCuan' | 'pasangIklan' | 'joinTelegram' | 'pasangIklanOnGoing' | 'eventRecruitment' | 'favorites', data?: string) => {
     e.preventDefault();
     onNavigate(view, data);
     if (isMenuOpen) {
@@ -38,7 +39,7 @@ const Header: React.FC<HeaderProps> = ({ onNavigate }) => {
   const NavItem: React.FC<{ link: NavLink; className?: string }> = ({ link, className }) => {
     const categoryLinks = ['MT/ODP', 'BUMN', 'Fresh Grad', 'Intern'];
     
-    let view: 'home' | 'blog' | 'jobCategory' | 'companyList' | 'misiCuan' | 'konsulKarir' | 'bangunCv' | 'pasangIklan' | 'joinTelegram' | 'konsulKarirOnGoing' | 'bangunCvOnGoing' | 'pasangIklanOnGoing' | 'eventRecruitment' | 'favorites' | 'pelatihan' | 'psikotest' = 'jobCategory';
+    let view: 'home' | 'blog' | 'jobCategory' | 'companyList' | 'misiCuan' | 'pasangIklan' | 'joinTelegram' | 'pasangIklanOnGoing' | 'eventRecruitment' | 'favorites' = 'jobCategory';
     let data: string | undefined = undefined;
 
     const linkNameLower = link.name.toLowerCase();
@@ -47,16 +48,10 @@ const Header: React.FC<HeaderProps> = ({ onNavigate }) => {
         view = 'home';
     } else if (linkNameLower === 'blog') {
         view = 'blog';
+    } else if (linkNameLower === 'event') {
+        view = 'eventRecruitment';
     } else if (linkNameLower === 'misi cuan') {
         view = 'misiCuan';
-    } else if (linkNameLower === 'pelatihan') {
-        view = 'pelatihan';
-    } else if (linkNameLower === 'psikotest') {
-        view = 'psikotest';
-    } else if (linkNameLower === 'konsul karir') {
-        view = 'konsulKarirOnGoing';
-    } else if (linkNameLower === 'bangun cv') {
-        view = 'bangunCvOnGoing';
     } else if (linkNameLower === 'pasang iklan') {
         view = 'pasangIklanOnGoing';
     } else if (linkNameLower === 'komunitas') {
