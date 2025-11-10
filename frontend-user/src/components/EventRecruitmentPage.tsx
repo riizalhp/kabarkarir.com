@@ -21,22 +21,22 @@ const EventCard: React.FC<{ event: RecruitmentEvent; onSelectEvent: (eventSlug: 
         onClick={() => onSelectEvent(event.slug || String(event.id))}
         className={`bg-white rounded-lg shadow overflow-hidden flex flex-col transition duration-300 hover:shadow-lg hover:-translate-y-1 cursor-pointer h-full ${event.isFeatured ? 'border-2 border-accent' : ''}`}
     >
-        <div className="relative p-5 flex-grow">
+        <div className="relative p-3 flex-grow">
             {event.isFeatured && (
-                <span className="absolute -top-3 right-5 bg-accent text-white text-xs font-bold px-3 py-1 rounded-full z-10">UNGGULAN</span>
+                <span className="absolute -top-2 right-3 bg-accent text-white text-[9px] font-bold px-2 py-0.5 rounded-full z-10">UNGGULAN</span>
             )}
-            <h3 className="font-bold text-secondary text-lg mb-3">{event.title}</h3>
-            <div className="flex items-center text-sm text-gray-600 mb-2">
-                <i className="far fa-calendar-alt w-5 mr-2 text-primary"></i>
+            <h3 className="font-bold text-secondary text-xs mb-2 line-clamp-2 leading-tight">{event.title}</h3>
+            <div className="flex items-center text-[10px] text-gray-600 mb-1.5">
+                <i className="far fa-calendar-alt w-4 mr-1.5 text-primary text-[9px]"></i>
                 <span>{event.date}</span>
             </div>
-            <div className="flex items-center text-sm text-gray-600">
-                <i className="fas fa-map-marker-alt w-5 mr-2 text-primary"></i>
-                <span>{event.location}</span>
+            <div className="flex items-center text-[10px] text-gray-600">
+                <i className="fas fa-map-marker-alt w-4 mr-1.5 text-primary text-[9px]"></i>
+                <span className="truncate">{event.location}</span>
             </div>
         </div>
-        <div className="bg-gray-50 p-4 border-t border-gray-200 mt-auto">
-            <button onClick={() => onSelectEvent(event.slug || String(event.id))} className="text-secondary font-medium hover:text-primary transition text-sm">
+        <div className="bg-gray-50 p-2 border-t border-gray-200 mt-auto">
+            <button onClick={() => onSelectEvent(event.slug || String(event.id))} className="text-secondary font-medium hover:text-primary transition text-[10px]">
                 Lihat Detail & Daftar
             </button>
         </div>
@@ -161,10 +161,10 @@ const EventRecruitmentPage: React.FC<EventRecruitmentPageProps> = ({ allEvents, 
         </div>
 
         <div className="flex flex-col lg:flex-row gap-8">
-            <main className="w-full lg:w-2/3">
+            <main className="w-full lg:w-3/4">
               {currentEvents.length > 0 ? (
                 <>
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3">
                       {currentEvents.map((event) => (
                           <div key={event.id} className="relative">
                             <EventCard event={event} onSelectEvent={onSelectEvent} />

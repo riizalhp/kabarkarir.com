@@ -26,17 +26,17 @@ const ArticleCard: React.FC<{ post: BlogPost; onSelectArticle: (slug: string) =>
   };
 
   return (
-    <div className="bg-white rounded-lg shadow overflow-hidden transition duration-300 hover:shadow-xl hover:-translate-y-1 flex flex-col">
-      <div onClick={() => onSelectArticle(post.slug || String(post.id))} className="h-48 overflow-hidden cursor-pointer">
+    <div className="bg-white rounded-lg shadow overflow-hidden transition duration-300 hover:shadow-lg hover:-translate-y-1 flex flex-col">
+      <div onClick={() => onSelectArticle(post.slug || String(post.id))} className="h-32 overflow-hidden cursor-pointer">
         <img src={post.image} alt={post.title} className="w-full h-full object-cover hover:scale-105 transition duration-500" />
       </div>
-      <div className="p-5 flex flex-col flex-grow">
-        <span className={`self-start text-xs font-medium px-2 py-1 rounded-full ${badgeColorClasses[post.categoryColor]}`}>{post.category}</span>
-        <h3 onClick={() => onSelectArticle(post.slug || String(post.id))} className="font-semibold text-secondary mt-3 h-12 text-ellipsis overflow-hidden cursor-pointer hover:text-primary">{post.title}</h3>
-        <p className="text-sm text-gray-600 mt-2 mb-4 flex-grow text-truncate-2">{post.description}</p>
+      <div className="p-3 flex flex-col flex-grow">
+        <span className={`self-start text-[9px] font-medium px-1.5 py-0.5 rounded-full ${badgeColorClasses[post.categoryColor]}`}>{post.category}</span>
+        <h3 onClick={() => onSelectArticle(post.slug || String(post.id))} className="font-semibold text-secondary mt-2 text-xs line-clamp-2 leading-tight cursor-pointer hover:text-primary">{post.title}</h3>
+        <p className="text-[10px] text-gray-600 mt-1.5 mb-2 flex-grow line-clamp-2 leading-snug">{post.description}</p>
         <div className="flex justify-between items-center mt-auto">
-          <span className="text-xs text-gray-500">{post.posted}</span>
-          <button onClick={() => onSelectArticle(post.slug || String(post.id))} className="text-secondary text-sm font-medium hover:text-primary">
+          <span className="text-[9px] text-gray-500">{post.posted}</span>
+          <button onClick={() => onSelectArticle(post.slug || String(post.id))} className="text-secondary text-[10px] font-medium hover:text-primary">
             Baca Selengkapnya
           </button>
         </div>
@@ -117,10 +117,10 @@ const BlogPage: React.FC<BlogPageProps> = ({ posts, onSelectArticle, onNavigateT
         </div>
 
         <div className="flex flex-col lg:flex-row gap-8">
-            <div className="w-full lg:w-2/3">
+            <div className="w-full lg:w-3/4">
               {currentPosts.length > 0 ? (
                 <>
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3">
                     {currentPosts.map((post, index) => (
                       <React.Fragment key={post.id}>
                         <ArticleCard post={post} onSelectArticle={onSelectArticle} />

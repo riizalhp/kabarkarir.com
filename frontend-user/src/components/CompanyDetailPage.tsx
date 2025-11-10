@@ -2,7 +2,9 @@ import React, { useState, useEffect, useMemo } from 'react';
 import { Job, CompanyProfile, Company, RecruitmentEvent, BlogPost } from '../types';
 import JobCard from './JobCard';
 import Sidebar from './Sidebar';
+import AdsBanner from './AdsBanner';
 import LoadMore from './LoadMore';
+import Pagination from './Pagination';
 import { viewTrackingService } from '../services/viewTracking';
 import { injectJSONLD, updateMetaTags, generateCompanySchema, generateBreadcrumbSchema } from '../utils/seo';
 
@@ -25,6 +27,7 @@ interface CompanyDetailPageProps {
 
 const INITIAL_ITEMS = 12;
 const ITEMS_TO_LOAD = 12;
+const ITEMS_PER_PAGE = 12;
 
 const CompanyDetailPage: React.FC<CompanyDetailPageProps> = ({ companySlug, companyPreview, allJobs, allCompanies, onSelectJob, onSelectCategory, onSelectCompany, onNavigateToBlog, onNavigateToEventRecruitment, onSelectEvent, isPreviewMode = false, trendingCompanies, latestArticles, allEvents }) => {
   const [currentPage, setCurrentPage] = useState(1);
@@ -128,38 +131,56 @@ const CompanyDetailPage: React.FC<CompanyDetailPageProps> = ({ companySlug, comp
   }
 
   return (
-    <section className="py-10 px-4">
+    <section className="py-6 px-4">
       <div className="container mx-auto">
-        <div className="flex flex-col lg:flex-row gap-8">
-            <div className="w-full lg:w-2/3">
+        {/* Back Button */}
+        <button
+          onClick={() => window.history.back()}
+          className="flex items-center gap-1.5 text-gray-600 hover:text-primary mb-3 transition-colors text-xs"
+        >
+          <i className="fas fa-arrow-left text-[10px]"></i>
+          <span>Kembali</span>
+        </button>
+
+        <div className="flex flex-col lg:flex-row gap-4">
+            {/* Left Sidebar - Ads Banner */}
+            {!isPreviewMode && (
+              <div className="hidden xl:block w-40 shrink-0">
+                <div className="sticky top-4">
+                  <AdsBanner position="left" size="vertical" />
+                </div>
+              </div>
+            )}
+
+            <div className="w-full lg:flex-1">
                 {/* Company Header Card */}
-                <div className="bg-white p-6 rounded-lg shadow-md mb-8">
-                    <div className="flex flex-col md:flex-row items-center gap-6 text-center md:text-left">
-                        <div className="h-24 w-24 flex items-center justify-center bg-white border border-gray-100 rounded-lg p-2 shrink-0 shadow-sm">
+                <div className="bg-white p-4 rounded-lg shadow-md mb-4">
+                    <div className="flex flex-col md:flex-row items-center gap-3 text-center md:text-left">
+                        <div className="h-14 w-14 flex items-center justify-center bg-white border border-gray-100 rounded-lg p-1.5 shrink-0 shadow-sm">
                             <img src={company.logo} alt={`${company.name} logo`} className="max-h-full max-w-full object-contain" />
                         </div>
                         <div>
-                            <span className={`inline-block text-xs font-semibold px-2.5 py-1 rounded-full ${company.type === 'BUMN' ? 'bg-blue-100 text-blue-800' : 'bg-green-100 text-green-800'}`}>{company.type}</span>
-                            <h1 className="text-2xl md:text-3xl font-bold text-secondary mt-2">{company.name}</h1>
+                            <span className={`inline-block text-[9px] font-semibold px-2 py-0.5 rounded-full ${company.type === 'BUMN' ? 'bg-blue-100 text-blue-800' : 'bg-green-100 text-green-800'}`}>{company.type}</span>
+                            <h1 className="text-base font-bold text-secondary mt-1">{company.name}</h1>
                         </div>
                     </div>
                 </div>
 
                 {/* About Company */}
-                <div className="bg-white p-6 rounded-lg shadow-md mb-8">
-                    <h2 className="text-xl font-bold text-secondary border-b pb-3 mb-4">Tentang Perusahaan</h2>
-                    <p className="text-gray-700 leading-relaxed">{company.description}</p>
+                <div className="bg-white p-4 rounded-lg shadow-md mb-4">
+                    <h2 className="text-xs font-bold text-secondary border-b pb-2 mb-2">Tentang Perusahaan</h2>
+                    <p className="text-gray-700 text-[11px] leading-relaxed">{company.description}</p>
                     {company.website && (
-                        <div className="mt-4 pt-4 border-t">
+                        <div className="mt-3 pt-3 border-t">
                             <a 
                                 href={company.website} 
                                 target="_blank" 
                                 rel="noopener noreferrer" 
-                                className="inline-flex items-center text-primary hover:text-blue-700 font-medium transition-colors"
+                                className="inline-flex items-center text-primary hover:text-blue-700 font-medium transition-colors text-[10px]"
                             >
-                                <i className="fas fa-globe mr-2"></i>
+                                <i className="fas fa-globe mr-1.5 text-[9px]"></i>
                                 Kunjungi Website Resmi
-                                <i className="fas fa-external-link-alt ml-2 text-sm"></i>
+                                <i className="fas fa-external-link-alt ml-1.5 text-[8px]"></i>
                             </a>
                         </div>
                     )}
@@ -167,30 +188,30 @@ const CompanyDetailPage: React.FC<CompanyDetailPageProps> = ({ companySlug, comp
                 
                 {/* Job Listings */}
                 <div>
-                    <h2 className="text-xl font-bold text-secondary mb-6">Lowongan Tersedia ({filteredJobs.length})</h2>
+                    <h2 className="text-sm font-bold text-secondary mb-3">Lowongan Tersedia ({filteredJobs.length})</h2>
                     
                     {/* Filter Bar for Jobs */}
                     {companyJobs.length > 0 && (
-                        <div className="bg-white p-4 rounded-lg shadow-md mb-8">
-                            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 items-end">
+                        <div className="bg-white p-3 rounded-lg shadow-md mb-4">
+                            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-2 items-end">
                                 <div className="lg:col-span-2">
-                                    <label htmlFor="keyword" className="block text-sm font-medium text-gray-700">Kata Kunci</label>
-                                    <input type="text" id="keyword" value={keyword} onChange={(e) => setKeyword(e.target.value)} placeholder="Judul posisi..." className="mt-1 w-full py-2 px-3 border border-gray-300 rounded-md"/>
+                                    <label htmlFor="keyword" className="block text-[9px] font-medium text-gray-700">Kata Kunci</label>
+                                    <input type="text" id="keyword" value={keyword} onChange={(e) => setKeyword(e.target.value)} placeholder="Judul posisi..." className="mt-0.5 w-full py-1.5 px-2 border border-gray-300 rounded-md text-[10px]"/>
                                 </div>
                                 <div>
-                                    <label htmlFor="jobType" className="block text-sm font-medium text-gray-700">Tipe</label>
-                                    <select id="jobType" value={jobType} onChange={(e) => setJobType(e.target.value)} className="mt-1 w-full py-2 px-3 border border-gray-300 rounded-md bg-white">
+                                    <label htmlFor="jobType" className="block text-[9px] font-medium text-gray-700">Tipe</label>
+                                    <select id="jobType" value={jobType} onChange={(e) => setJobType(e.target.value)} className="mt-0.5 w-full py-1.5 px-2 border border-gray-300 rounded-md bg-white text-[10px]">
                                         {uniqueJobTypes.map(type => <option key={type} value={type}>{type}</option>)}
                                     </select>
                                 </div>
-                                <button onClick={handleResetFilters} className="bg-gray-200 text-gray-700 py-2 px-4 rounded-md font-medium hover:bg-gray-300 transition">Reset</button>
+                                <button onClick={handleResetFilters} className="bg-gray-200 text-gray-700 py-1.5 px-3 rounded-md font-medium hover:bg-gray-300 transition text-[10px]">Reset</button>
                             </div>
                         </div>
                     )}
                     
                     {filteredJobs.length > 0 ? (
                     <>
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3">
                         {currentJobs.map(job => (
                             <JobCard key={job.id} job={job} onSelectJob={onSelectJob} onSelectCategory={onSelectCategory} onSelectCompany={onSelectCompany} />
                         ))}
@@ -203,10 +224,10 @@ const CompanyDetailPage: React.FC<CompanyDetailPageProps> = ({ companySlug, comp
                         />
                     </>
                     ) : (
-                    <div className="text-center py-16 bg-white rounded-lg shadow-md">
-                        <i className="fas fa-search fa-3x text-gray-400 mb-4"></i>
-                        <h3 className="text-xl font-semibold text-secondary">Belum Ada Lowongan</h3>
-                        <p className="text-gray-500 mt-2">
+                    <div className="text-center py-8 bg-white rounded-lg shadow-md">
+                        <i className="fas fa-search fa-2x text-gray-400 mb-3"></i>
+                        <h3 className="text-sm font-semibold text-secondary">Belum Ada Lowongan</h3>
+                        <p className="text-gray-500 mt-1.5 text-[11px]">
                           {companyJobs.length > 0 ? "Tidak ada lowongan yang cocok dengan filter Anda." : `Saat ini belum ada lowongan yang tersedia untuk ${company.name}.`}
                         </p>
                     </div>

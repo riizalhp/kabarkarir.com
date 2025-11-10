@@ -8,23 +8,16 @@ import ScholarshipPage from './components/ScholarshipPage';
 import CompetitionPage from './components/CompetitionPage';
 import WebinarPage from './components/WebinarPage';
 import CampusEventPage from './components/CampusEventPage';
-import FreelancePage from './components/FreelancePage';
 import BlogPage from './components/BlogPage';
-import MisiCuanPage from './components/MisiCuanPage';
-import KonsulKarirPage from './components/KonsulKarirPage';
-import BangunCVPage from './components/BangunCVPage';
 import PasangIklanPage from './components/PasangIklanPage';
-import KomunitasPage from './components/KomunitasPage';
-import PsikotestPage from './components/PsikotestPage';
 
 // Coming Soon Pages
-import PsikotestComingSoon from './components/PsikotestComingSoon';
 import BangunCVComingSoon from './components/BangunCVComingSoon';
 import KonsulKarirComingSoon from './components/KonsulKarirComingSoon';
-import PasangIklanComingSoon from './components/PasangIklanComingSoon';
 import KomunitasComingSoon from './components/KomunitasComingSoon';
 import MisiCuanComingSoon from './components/MisiCuanComingSoon';
 import FreelanceComingSoon from './components/FreelanceComingSoon';
+import PsikotestComingSoon from './components/PsikotestComingSoon';
 
 const Router: React.FC = () => {
   return (
@@ -47,12 +40,12 @@ const Router: React.FC = () => {
           <Route path="/freelance/:slug" element={<FreelanceComingSoon />} />
           <Route path="/blog" element={<BlogPage />} />
           <Route path="/blog/:slug" element={<BlogPage />} />
+          <Route path="/pasang-iklan" element={<PasangIklanPage />} />
           {/* Coming Soon Routes */}
           <Route path="/misi-cuan" element={<MisiCuanComingSoon />} />
           <Route path="/psikotes" element={<PsikotestComingSoon />} />
           <Route path="/konsul-karir" element={<KonsulKarirComingSoon />} />
           <Route path="/bangun-cv" element={<BangunCVComingSoon />} />
-          <Route path="/pasang-iklan" element={<PasangIklanComingSoon />} />
           <Route path="/komunitas" element={<KomunitasComingSoon />} />
         </Routes>
       </main>

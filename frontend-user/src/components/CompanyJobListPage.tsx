@@ -23,6 +23,7 @@ interface CompanyJobListPageProps {
 
 const INITIAL_ITEMS = 12;
 const ITEMS_TO_LOAD = 12;
+const ITEMS_PER_PAGE = 12;
 
 const CompanyJobListPage: React.FC<CompanyJobListPageProps> = ({ companySlug, companyPreview, allJobs, allCompanies, onSelectJob, onSelectCategory, onSelectCompany, onNavigateToBlog, onNavigateToEventRecruitment, onSelectEvent, trendingCompanies, latestArticles, allEvents, isPreviewMode = false }) => {
   const [currentPage, setCurrentPage] = useState(1);

@@ -28,28 +28,38 @@ export interface Job {
   id: number;
   title: string;
   company: string;
-  companySlug: string;
-  logo: string;
-  location: string;
-  province: string;
-  city: string;
-  type: string;
-  category: string;
-  categoryColor: 'blue' | 'green' | 'orange';
-  description: string;
-  posted: string;
-  education: string;
-  qualifications: string[];
-  benefits: string[];
-  howToApply: string;
-  aboutCompany: string;
-  experience: string;
-  tags: string[];
+  companySlug?: string;
+  logo?: string;
+  location?: string;
+  province?: string;
+  city?: string;
+  type?: string;
+  category?: string;
+  categoryColor?: 'blue' | 'green' | 'orange';
+  description?: string;
+  posted?: string;
+  education?: string;
+  qualifications?: string[];
+  benefits?: string[];
+  howToApply?: string;
+  aboutCompany?: string; // Frontend field
+  about_company?: string; // Database field
+  experience?: string;
+  tags?: string[];
   majors?: string[];
   pdfEmbedUrl?: string;
   videoEmbedUrl?: string;
   dueDate?: string;
   salaryRange?: string;
+  slug?: string;
+  is_active?: boolean;
+  posted_date?: string;
+  category_color?: string;
+  salary_range?: string;
+  how_to_apply?: string;
+  due_date?: string;
+  pdf_embed_url?: string;
+  video_embed_url?: string;
 }
 
 export interface Company {
@@ -90,13 +100,13 @@ export interface RecruitmentEvent {
 
 export interface BlogPost {
   id: number;
-  image: string;
-  category: string;
-  categoryColor: 'blue' | 'green' | 'orange';
   title: string;
-  description: string;
-  posted: string;
+  category: string;
+  description?: string;
   content?: string;
+  image?: string;
+  posted?: string;
+  categoryColor?: 'blue' | 'green' | 'orange'; // Frontend display only
 }
 
 export interface SubmissionField {

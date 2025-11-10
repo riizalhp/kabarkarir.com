@@ -5,6 +5,7 @@ import LoadMore from './LoadMore';
 
 interface JobListingsProps {
   jobs: Job[];
+  globalSearchQuery?: string;
   onSelectJob: (jobSlug: string) => void;
   onSelectCategory: (category: string) => void;
   onSelectCompany: (companySlug: string) => void;
@@ -13,12 +14,28 @@ interface JobListingsProps {
 const INITIAL_ITEMS = 10;
 const ITEMS_TO_LOAD = 10;
 
-const JobListings: React.FC<JobListingsProps> = ({ jobs, onSelectJob, onSelectCategory, onSelectCompany }) => {
+const JobListings: React.FC<JobListingsProps> = ({ jobs, globalSearchQuery = '', onSelectJob, onSelectCategory, onSelectCompany }) => {
   const [visibleItems, setVisibleItems] = useState(INITIAL_ITEMS);
   const [isLoading, setIsLoading] = useState(false);
 
-  const currentJobs = jobs.slice(0, visibleItems);
-  const hasMore = visibleItems < jobs.length;
+  // Filter jobs based on global search query (real-time search)
+  const filteredJobs = jobs.filter(job => {
+    if (!globalSearchQuery) return true;
+    
+    const query = globalSearchQuery.toLowerCase();
+    return (
+      job.title.toLowerCase().includes(query) ||
+      job.company.toLowerCase().includes(query) ||
+      job.location.toLowerCase().includes(query) ||
+      job.description.toLowerCase().includes(query) ||
+      job.category.toLowerCase().includes(query) ||
+      job.tags.some(tag => tag.toLowerCase().includes(query)) ||
+      (job.majors && job.majors.some(major => major.toLowerCase().includes(query)))
+    );
+  });
+
+  const currentJobs = filteredJobs.slice(0, visibleItems);
+  const hasMore = visibleItems < filteredJobs.length;
 
   const handleLoadMore = () => {
     setIsLoading(true);

@@ -2,7 +2,8 @@ import * as React from 'react';
 import { BlogPost, Activity } from '../../types';
 import RichTextEditor from '../RichTextEditor';
 import Pagination from '../Pagination';
-import { adminBlogService, activityLogsService } from '../../services/adminApi';
+import { activityLogsService } from '../../services/adminApi';
+import blogService from '../../services/blogService';
 import { toast } from '../../utils/toast';
 
 interface AdminArticlesProps {
@@ -29,7 +30,7 @@ const AdminArticles: React.FC<AdminArticlesProps> = ({ articles, setArticles, on
     const fetchArticles = async () => {
         try {
             setDataLoading(true);
-            const data = await adminBlogService.getAll();
+            const data = await blogService.getAll();
             setArticles(data);
         } catch (error) {
             console.error('Error fetching articles:', error);
@@ -44,7 +45,7 @@ const AdminArticles: React.FC<AdminArticlesProps> = ({ articles, setArticles, on
     }, [searchTerm]);
 
     const handleOpenModal = (article: Partial<BlogPost> | null = null) => {
-        setCurrentArticle(article ? { ...article } : { title: '', category: 'Tips Karir', description: '', content: '', image: '', categoryColor: 'blue' });
+        setCurrentArticle(article ? { ...article } : { title: '', category: 'Tips Karir', description: '', content: '', image: '' });
         setIsModalOpen(true);
     };
 
@@ -59,7 +60,7 @@ const AdminArticles: React.FC<AdminArticlesProps> = ({ articles, setArticles, on
                 setLoading(true);
                 const articleToDelete = articles.find(a => a.id === articleId);
                 
-                await adminBlogService.delete(articleId);
+                await blogService.delete(articleId);
                 setArticles(prevArticles => prevArticles.filter(a => a.id !== articleId));
                 
                 if (articleToDelete) {
@@ -98,8 +99,15 @@ const AdminArticles: React.FC<AdminArticlesProps> = ({ articles, setArticles, on
             const finalArticle = { ...currentArticle, description };
 
             if (finalArticle.id) {
-                // Update
-                const updated = await adminBlogService.update(finalArticle.id, finalArticle);
+                // Update - only send allowed fields
+                const updated = await blogService.update(finalArticle.id, {
+                    title: finalArticle.title,
+                    category: finalArticle.category,
+                    content: finalArticle.content,
+                    description: finalArticle.description,
+                    image: finalArticle.image,
+                    posted: finalArticle.posted,
+                });
                 setArticles(prevArticles => prevArticles.map(a => a.id === finalArticle.id ? updated : a));
                 
                 await activityLogsService.create({
@@ -116,12 +124,13 @@ const AdminArticles: React.FC<AdminArticlesProps> = ({ articles, setArticles, on
                 
                 toast('Artikel berhasil diperbarui');
             } else {
-                // Create
-                const newArticle = await adminBlogService.create({
-                    ...finalArticle,
-                    posted: new Date().toISOString(),
+                // Create - only send allowed fields
+                const newArticle = await blogService.create({
+                    title: finalArticle.title,
+                    category: finalArticle.category,
+                    content: finalArticle.content || '',
+                    description: finalArticle.description || '',
                     image: finalArticle.image || 'https://picsum.photos/seed/newblog/400/300',
-                    categoryColor: 'blue',
                 } as Omit<BlogPost, 'id'>);
                 
                 setArticles(prevArticles => [newArticle, ...prevArticles]);

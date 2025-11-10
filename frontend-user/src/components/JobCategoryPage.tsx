@@ -95,8 +95,17 @@ const JobCategoryPage: React.FC<JobCategoryPageProps> = ({ category, allJobs, on
         const normalizedCategory = category.toLowerCase().replace(/-/g, ' ');
         const normalizedReadable = readableCategory.toLowerCase();
         
+        // Handle special case for MT/ODP - split by slash to match individual tags
+        const categoryParts = normalizedReadable.split('/').map(p => p.trim());
+        
         jobs = jobs.filter(job => {
             const lowerCaseTags = job.tags.map(t => t.toLowerCase());
+            
+            // Check if any part of category (split by /) matches tags
+            const matchesCategoryParts = categoryParts.some(part => 
+              lowerCaseTags.includes(part)
+            );
+            
             return job.category.toLowerCase() === normalizedCategory ||
                    job.category.toLowerCase() === normalizedReadable ||
                    job.type.toLowerCase() === normalizedCategory ||
@@ -110,7 +119,8 @@ const JobCategoryPage: React.FC<JobCategoryPageProps> = ({ category, allJobs, on
                      major.toLowerCase().includes(normalizedReadable)
                    )) ||
                    lowerCaseTags.includes(normalizedCategory) ||
-                   lowerCaseTags.includes(normalizedReadable);
+                   lowerCaseTags.includes(normalizedReadable) ||
+                   matchesCategoryParts;
         });
     }
 

@@ -3,7 +3,6 @@ import { Tag } from '../../types';
 import { toast } from '../../utils/toast';
 import { downloadExcelTemplate } from '../../utils/excel';
 import Pagination from '../Pagination';
-import PreviewModal from '../PreviewModal';
 import { adminTagsService } from '../../services/adminApi';
 
 // Beri tahu TypeScript tentang objek XLSX global dari CDN
@@ -23,8 +22,6 @@ const AdminTags: React.FC<AdminTagsProps> = ({ tags, setTags }) => {
     const [currentPage, setCurrentPage] = useState(1);
     const [loading, setLoading] = useState(false);
     const [dataLoading, setDataLoading] = useState(true);
-    const [previewData, setPreviewData] = useState<any>(null);
-    const [previewType, setPreviewType] = useState<string>('');
     
     useEffect(() => {
         fetchTags();
@@ -55,16 +52,6 @@ const AdminTags: React.FC<AdminTagsProps> = ({ tags, setTags }) => {
     const handleCloseModal = () => {
         setIsModalOpen(false);
         setCurrentTag(null);
-    };
-
-    const handleShowPreview = (data: any, type: string) => {
-        setPreviewData(data);
-        setPreviewType(type);
-    };
-
-    const handleClosePreview = () => {
-        setPreviewData(null);
-        setPreviewType('');
     };
 
     const handleDelete = async (tagId: number) => {
@@ -296,14 +283,6 @@ const AdminTags: React.FC<AdminTagsProps> = ({ tags, setTags }) => {
                             </div>
                             <div className="flex justify-end space-x-3 pt-4 border-t mt-6">
                                 <button type="button" onClick={handleCloseModal} className="bg-slate-200 text-slate-800 px-4 py-2 rounded-lg font-medium hover:bg-slate-300" disabled={loading}>Batal</button>
-                                <button 
-                                    type="button" 
-                                    onClick={() => handleShowPreview(currentTag, 'tag')} 
-                                    className="bg-green-600 text-white px-4 py-2 rounded-lg font-medium hover:bg-green-700"
-                                    disabled={loading || !currentTag?.name?.trim()}
-                                >
-                                    <i className="far fa-eye mr-2"></i>Preview
-                                </button>
                                 <button type="submit" className="bg-primary text-white px-4 py-2 rounded-lg font-medium hover:bg-blue-700 disabled:opacity-50" disabled={loading}>
                                     {loading ? <><i className="fas fa-spinner fa-spin mr-2"></i>Menyimpan...</> : 'Simpan'}
                                 </button>
@@ -312,12 +291,6 @@ const AdminTags: React.FC<AdminTagsProps> = ({ tags, setTags }) => {
                     </div>
                 </div>
             )}
-
-            <PreviewModal
-                type={previewType as any}
-                data={previewData}
-                onClose={handleClosePreview}
-            />
         </div>
     );
 };

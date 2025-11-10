@@ -59,12 +59,15 @@ const App: React.FC = () => {
   const [tags, setTags] = useState<Tag[]>([]);
   const [loading, setLoading] = useState(true);
   const [categories] = useState<Category[]>(CATEGORIES);
+  const [globalSearchQuery, setGlobalSearchQuery] = useState<string>('');
 
   // --- FETCH DATA FROM SUPABASE ON MOUNT ---
   useEffect(() => {
     const fetchAllData = async () => {
       try {
         setLoading(true);
+        
+        console.log('🔍 Fetching data from Supabase...');
         
         // Fetch all data in parallel
         const [
@@ -78,7 +81,7 @@ const App: React.FC = () => {
           tagsData,
         ] = await Promise.all([
           jobsService.getAll(),
-          companiesService.getAllSimple(), // Use getAllSimple for backward compatibility
+          companiesService.getAllSimple(),
           blogService.getAll(),
           eventsService.getAll(),
           misiService.getAll(),
@@ -87,16 +90,27 @@ const App: React.FC = () => {
           tagsService.getAll(),
         ]);
 
-        setJobs(jobsData);
-        setCompanies(companiesData);
-        setBlogPosts(blogData);
-        setEvents(eventsData);
-        setMisiOffers(misiData);
-        setCourses(pelatihanData);
-        setMajors(majorsData);
-        setTags(tagsData);
+        console.log('✅ Data fetched successfully:');
+        console.log('   - Jobs:', jobsData?.length || 0);
+        console.log('   - Companies:', companiesData?.length || 0);
+        console.log('   - Blog:', blogData?.length || 0);
+        console.log('   - Events:', eventsData?.length || 0);
+        console.log('   - Misi:', misiData?.length || 0);
+        console.log('   - Pelatihan:', pelatihanData?.length || 0);
+        console.log('   - Majors:', majorsData?.length || 0);
+        console.log('   - Tags:', tagsData?.length || 0);
+
+        setJobs(jobsData || []);
+        setCompanies(companiesData || []);
+        setBlogPosts(blogData || []);
+        setEvents(eventsData || []);
+        setMisiOffers(misiData || []);
+        setCourses(pelatihanData || []);
+        setMajors(majorsData || []);
+        setTags(tagsData || []);
       } catch (error) {
-        console.error('Error fetching data:', error);
+        console.error('❌ Error fetching data:', error);
+        console.error('Error details:', JSON.stringify(error, null, 2));
       } finally {
         setLoading(false);
       }
@@ -244,6 +258,11 @@ const App: React.FC = () => {
       return [homeCrumb, { name: 'Pasang Iklan' }];
     }
 
+    // Search route
+    if (path === '/search') {
+      return [homeCrumb, { name: 'Hasil Pencarian' }];
+    }
+
     // Other routes
     if (path === '/favorit') return [homeCrumb, { name: 'Favorit' }];
     if (path === '/komunitas') return [homeCrumb, { name: 'Komunitas' }];
@@ -289,6 +308,11 @@ const App: React.FC = () => {
           window.location.href = `/kategori/${slugify(category)}`;
         }
         break;
+      case 'search':
+        if (category) { // category parameter used as search query
+          window.location.href = `/search?q=${encodeURIComponent(category)}`;
+        }
+        break;
       default:
         window.location.href = '/';
     }
@@ -304,11 +328,15 @@ const App: React.FC = () => {
     window.location.href = routes[view];
   };
 
+  const handleSearch = (query: string) => {
+    setGlobalSearchQuery(query);
+  };
+
   const breadcrumbs = generateBreadcrumbs();
 
   return (
     <div className="bg-gray-50 font-poppins">
-      <Header onNavigate={handleNavigation} />
+      <Header onNavigate={handleNavigation} onSearch={handleSearch} />
       <main>
         {breadcrumbs.length > 0 && (
           <div className="bg-white border-b border-gray-200">
@@ -340,6 +368,7 @@ const App: React.FC = () => {
           companiesWithJobCount={companiesWithJobCount}
           trendingCompanies={trendingCompanies}
           dynamicCategories={dynamicCategories}
+          globalSearchQuery={globalSearchQuery}
         />
       </main>
       <Footer onNavigate={onFooterNavigate} />

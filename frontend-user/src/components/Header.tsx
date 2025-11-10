@@ -4,12 +4,14 @@ import { NavLink } from '../types';
 import { slugify } from '../utils/slugify';
 
 interface HeaderProps {
-  onNavigate: (view: 'home' | 'blog' | 'jobCategory' | 'companyList' | 'misiCuan' | 'pasangIklan' | 'joinTelegram' | 'pasangIklanOnGoing' | 'eventRecruitment' | 'favorites', category?: string) => void;
+  onNavigate: (view: 'home' | 'blog' | 'jobCategory' | 'companyList' | 'misiCuan' | 'pasangIklan' | 'joinTelegram' | 'pasangIklanOnGoing' | 'eventRecruitment' | 'favorites' | 'search', category?: string) => void;
+  onSearch?: (query: string) => void;
 }
 
-const Header: React.FC<HeaderProps> = ({ onNavigate }) => {
+const Header: React.FC<HeaderProps> = ({ onNavigate, onSearch }) => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [isScrolled, setIsScrolled] = useState(false);
+  const [searchQuery, setSearchQuery] = useState('');
 
   useEffect(() => {
     const handleScroll = () => {
@@ -111,8 +113,46 @@ const Header: React.FC<HeaderProps> = ({ onNavigate }) => {
           {/* Search bar */}
           <div className="w-full md:flex-1 md:mx-8 order-3 md:order-2 mt-3 md:mt-0">
             <div className="relative flex">
-              <input type="text" placeholder="Cari lowongan, perusahaan, atau kata kunci" className="w-full py-2.5 px-5 pl-12 focus:outline-none rounded-full border border-gray-300 focus:border-primary focus:ring-2 focus:ring-primary/50" />
-              <i className="fas fa-search absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-400"></i>
+              <input 
+                type="text" 
+                value={searchQuery}
+                onChange={(e) => {
+                  const value = e.target.value;
+                  setSearchQuery(value);
+                }}
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter' && searchQuery.trim()) {
+                    onNavigate('search', searchQuery.trim());
+                  }
+                }}
+                placeholder="Cari lowongan, perusahaan, atau kata kunci" 
+                className="w-full py-2.5 px-5 pl-12 focus:outline-none rounded-full border border-gray-300 focus:border-primary focus:ring-2 focus:ring-primary/50" 
+              />
+              <button
+                onClick={() => {
+                  if (searchQuery.trim()) {
+                    onNavigate('search', searchQuery.trim());
+                  }
+                }}
+                className="absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-primary cursor-pointer"
+                aria-label="Search"
+              >
+                <i className="fas fa-search"></i>
+              </button>
+              {searchQuery && (
+                <button
+                  onClick={() => {
+                    setSearchQuery('');
+                    if (onSearch) {
+                      onSearch('');
+                    }
+                  }}
+                  className="absolute right-4 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600"
+                  aria-label="Clear search"
+                >
+                  <i className="fas fa-times"></i>
+                </button>
+              )}
             </div>
           </div>
           

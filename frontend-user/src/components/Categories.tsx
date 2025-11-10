@@ -8,12 +8,12 @@ interface CategoriesProps {
 }
 
 const CategoryCard: React.FC<{ category: Category; onSelectCategory: (categoryName: string) => void; }> = ({ category, onSelectCategory }) => (
-  <a href="#" onClick={(e) => { e.preventDefault(); onSelectCategory(category.name); }} className="bg-white rounded-lg shadow p-5 text-center transition duration-300 hover:shadow-lg hover:-translate-y-1">
-    <div className={`${category.iconBgColor} w-12 h-12 rounded-full flex items-center justify-center mx-auto mb-3`}>
-      <i className={`${category.icon} ${category.iconTextColor} text-xl`}></i>
+  <a href="#" onClick={(e) => { e.preventDefault(); onSelectCategory(category.name); }} className="bg-white rounded-lg shadow p-3 text-center transition duration-300 hover:shadow-lg hover:-translate-y-1">
+    <div className={`${category.iconBgColor} w-10 h-10 rounded-full flex items-center justify-center mx-auto mb-2`}>
+      <i className={`${category.icon} ${category.iconTextColor} text-sm`}></i>
     </div>
-    <h3 className="text-secondary font-medium">{category.name}</h3>
-    <p className="text-xs text-gray-500 mt-1">{category.count} Lowongan</p>
+    <h3 className="text-secondary font-medium text-xs">{category.name}</h3>
+    <p className="text-[10px] text-gray-500 mt-0.5">{category.count} Lowongan</p>
   </a>
 );
 

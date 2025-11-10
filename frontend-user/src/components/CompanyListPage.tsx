@@ -15,8 +15,8 @@ interface CompanyListPageProps {
   allEvents: RecruitmentEvent[];
 }
 
-const INITIAL_ITEMS = 12;
-const ITEMS_TO_LOAD = 12;
+const INITIAL_ITEMS = 24;
+const ITEMS_TO_LOAD = 24;
 
 const CompanyListPage: React.FC<CompanyListPageProps> = ({ 
   onSelectCompany,
@@ -167,7 +167,7 @@ const CompanyListPage: React.FC<CompanyListPageProps> = ({
         </div>
 
         <div className="flex flex-col lg:flex-row gap-8">
-          <div className="w-full lg:w-2/3">
+          <div className="w-full lg:w-3/4">
             <div className="flex flex-col md:flex-row md:justify-between md:items-center mb-8">
               <div>
                 <h2 className="text-2xl md:text-3xl font-bold text-secondary">
@@ -179,17 +179,17 @@ const CompanyListPage: React.FC<CompanyListPageProps> = ({
 
             {loading ? (
               // Loading skeleton
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3 mb-8">
                 {Array.from({ length: ITEMS_TO_LOAD }).map((_, index) => (
                   <div
                     key={index}
                     className="bg-white rounded-lg shadow-md overflow-hidden animate-pulse"
                   >
-                    <div className="h-32 bg-gray-200"></div>
-                    <div className="p-6">
-                      <div className="h-6 bg-gray-200 rounded mb-4"></div>
-                      <div className="h-4 bg-gray-200 rounded w-3/4 mb-2"></div>
-                      <div className="h-4 bg-gray-200 rounded w-1/2"></div>
+                    <div className="h-20 bg-gray-200"></div>
+                    <div className="p-3">
+                      <div className="h-4 bg-gray-200 rounded mb-2"></div>
+                      <div className="h-3 bg-gray-200 rounded w-3/4 mb-2"></div>
+                      <div className="h-3 bg-gray-200 rounded w-1/2"></div>
                     </div>
                   </div>
                 ))}
@@ -204,7 +204,7 @@ const CompanyListPage: React.FC<CompanyListPageProps> = ({
               </div>
             ) : (
               <>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3 mb-8">
                   {companies.map((company) => (
                     <CompanyCard
                       key={company.id}

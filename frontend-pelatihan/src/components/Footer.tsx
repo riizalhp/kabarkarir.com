@@ -69,19 +69,19 @@ const Footer: React.FC = () => {
 
           {/* Tentang */}
           <div>
-            <h4 className="text-white font-bold mb-4">Tentang</h4>
+            <h4 className="text-white font-bold mb-4">Lainnya</h4>
             <ul className="space-y-2 text-sm">
+              <li>
+                <Link to="/komunitas" className="hover:text-primary transition">Komunitas</Link>
+              </li>
+              <li>
+                <Link to="/blog" className="hover:text-primary transition">Blog & Artikel</Link>
+              </li>
               <li>
                 <Link to="/about" className="hover:text-primary transition">Tentang Kami</Link>
               </li>
               <li>
-                <Link to="/privacy" className="hover:text-primary transition">Kebijakan Privasi</Link>
-              </li>
-              <li>
-                <Link to="/terms" className="hover:text-primary transition">Syarat & Ketentuan</Link>
-              </li>
-              <li>
-                <Link to="/help" className="hover:text-primary transition">Bantuan</Link>
+                <Link to="/contact" className="hover:text-primary transition">Hubungi Kami</Link>
               </li>
             </ul>
           </div>

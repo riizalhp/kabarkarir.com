@@ -7,13 +7,23 @@ import { Job, CompanyProfile, BlogPost, RecruitmentEvent, MisiCuanOffer, Pelatih
 export const jobsService = {
   // Get all active jobs
   getAll: async (): Promise<Job[]> => {
+    console.log('🔍 Fetching jobs from Supabase...');
     const { data, error } = await supabase
       .from('jobs')
       .select('*')
       .eq('is_active', true)
       .order('posted_date', { ascending: false });
     
-    if (error) throw error;
+    if (error) {
+      console.error('❌ Error fetching jobs:', error);
+      throw error;
+    }
+    
+    console.log('✅ Jobs fetched:', data?.length || 0, 'items');
+    if (data && data.length > 0) {
+      console.log('   First job:', data[0]);
+    }
+    
     return data as Job[];
   },
 
@@ -73,13 +83,11 @@ export const companiesService = {
     limit?: number;
     offset?: number;
   }): Promise<{ data: CompanyProfile[]; total: number }> => {
-    // ✅ Use single query with JOIN aggregation instead of N+1 queries
+    // ✅ Simplified query without JOIN for faster loading
+    // ✅ SELECT only essential fields
     let query = supabase
       .from('companies')
-      .select(`
-        *,
-        jobs:jobs(count)
-      `, { count: 'exact' });
+      .select('id, name, slug, logo, type, description, website', { count: 'exact' });
 
     // Filter by type if specified
     if (options?.type) {
@@ -102,12 +110,11 @@ export const companiesService = {
     
     if (error) throw error;
 
-    // Transform data to include jobsAvailable count
-    const companiesWithCount = (data || []).map((company: any) => {
-      const jobsAvailable = company.jobs?.[0]?.count || 0;
-      const { jobs, ...companyData } = company;
-      return { ...companyData, jobsAvailable };
-    });
+    // Add jobsAvailable as 0 (will be loaded separately if needed)
+    const companiesWithCount = (data || []).map((company: any) => ({
+      ...company,
+      jobsAvailable: 0
+    }));
     
     return {
       data: companiesWithCount as CompanyProfile[],
@@ -124,6 +131,7 @@ export const companiesService = {
   // Get company by slug
   getBySlug: async (slug: string): Promise<CompanyProfile | null> => {
     // ✅ Use single query with JOIN instead of 2 separate queries
+    // ✅ SELECT only needed fields to reduce data transfer
     const { data, error } = await supabase
       .from('companies')
       .select(`

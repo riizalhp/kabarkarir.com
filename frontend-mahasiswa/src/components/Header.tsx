@@ -102,7 +102,10 @@ const Header: React.FC = () => {
           <Link to="/blog" className="px-3 py-3 text-sm font-medium text-secondary hover:text-primary transition">
             Blog
           </Link>
-          <Link to="/komunitas" className="px-3 py-3 text-sm font-medium text-accent hover:text-orange-600 transition">
+          <Link to="/pasang-iklan" className="px-3 py-3 text-sm font-medium text-accent hover:text-orange-600 transition">
+            Pasang Iklan
+          </Link>
+          <Link to="/komunitas" className="px-3 py-3 text-sm font-medium text-secondary hover:text-primary transition">
             Komunitas
           </Link>
           <a href={MAIN_SITE_URL} className="px-3 py-3 text-sm font-medium text-secondary hover:text-primary transition">
@@ -153,7 +156,10 @@ const Header: React.FC = () => {
           <Link to="/favorit" onClick={toggleMenu} className="px-3 py-2 text-sm font-medium text-secondary hover:text-primary">
             Favorit
           </Link>
-          <Link to="/komunitas" onClick={toggleMenu} className="px-3 py-2 text-sm font-medium text-accent hover:text-orange-600">
+          <Link to="/pasang-iklan" onClick={toggleMenu} className="px-3 py-2 text-sm font-medium text-accent hover:text-orange-600">
+            Pasang Iklan
+          </Link>
+          <Link to="/komunitas" onClick={toggleMenu} className="px-3 py-2 text-sm font-medium text-secondary hover:text-primary">
             Komunitas
           </Link>
           <a href={MAIN_SITE_URL} className="px-3 py-2 text-sm font-medium text-secondary hover:text-primary">

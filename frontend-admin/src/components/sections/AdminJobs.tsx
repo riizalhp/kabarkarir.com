@@ -75,7 +75,7 @@ const AdminJobs: React.FC<AdminJobsProps> = ({ jobs, setJobs, allCompanies, allM
             qualifications: [],
             benefits: [],
             howToApply: '',
-            aboutCompany: defaultCompany?.description || '',
+            about_company: defaultCompany?.description || '',
             experience: 'Fresh Graduate',
             tags: [],
             pdfEmbedUrl: '',
@@ -206,7 +206,7 @@ const AdminJobs: React.FC<AdminJobsProps> = ({ jobs, setJobs, allCompanies, allM
                         company: selectedCompany.name,
                         companySlug: selectedCompany.slug,
                         logo: selectedCompany.logo,
-                        aboutCompany: selectedCompany.description,
+                        about_company: selectedCompany.description,
                     });
                 }
             } else {
@@ -315,7 +315,7 @@ const AdminJobs: React.FC<AdminJobsProps> = ({ jobs, setJobs, allCompanies, allM
                             qualifications: parseStringArray(row['Kualifikasi']),
                             benefits: parseStringArray(row['Benefit']),
                             howToApply: String(row['Cara Melamar'] || ''),
-                            aboutCompany: company.description,
+                            about_company: company.description,
                             experience: String(row['Pengalaman'] || 'Fresh Graduate'),
                             tags: parseStringArray(row['Tags']),
                             majors: parseStringArray(row['Jurusan']),
@@ -595,16 +595,15 @@ const AdminJobs: React.FC<AdminJobsProps> = ({ jobs, setJobs, allCompanies, allM
                                 />
                             </div>
                              <div>
-                                <label className="block text-sm font-medium text-slate-700">Tentang Perusahaan (untuk lowongan)</label>
-                                <p className="text-xs text-slate-500 mt-1">Data ini diambil otomatis dari profil perusahaan yang dipilih.</p>
+                                <label className="block text-sm font-medium text-slate-700">Tentang Perusahaan (Opsional)</label>
+                                <p className="text-xs text-slate-500 mt-1">Data ini diambil otomatis dari profil perusahaan yang dipilih, atau Anda bisa edit manual.</p>
                                 <AutoResizeTextarea 
-                                    name="aboutCompany" 
-                                    value={currentJob.aboutCompany || ''} 
+                                    name="about_company" 
+                                    value={(currentJob as any).about_company || ''} 
                                     onChange={handleInputChange} 
                                     minRows={3}
                                     maxRows={10}
-                                    className="mt-1 block w-full px-3 py-2 border border-slate-300 rounded-md bg-slate-100 cursor-not-allowed" 
-                                    readOnly 
+                                    className="mt-1 block w-full px-3 py-2 border border-slate-300 rounded-md" 
                                 />
                             </div>
                             <div>

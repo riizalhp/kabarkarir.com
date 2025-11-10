@@ -1,6 +1,17 @@
 import { supabase } from '../lib/supabase';
 import { Job, CompanyProfile, BlogPost, RecruitmentEvent, MisiCuanOffer, PelatihanInfo, Major, Tag, MisiSubmission } from '../types';
 
+// Helper function to generate slug
+const generateSlug = (text: string): string => {
+  return text
+    .toLowerCase()
+    .trim()
+    .replace(/[^\w\s-]/g, '') // Remove special characters
+    .replace(/\s+/g, '-')      // Replace spaces with -
+    .replace(/--+/g, '-')      // Replace multiple - with single -
+    .replace(/^-+|-+$/g, '');  // Remove leading/trailing -
+};
+
 // ============================================
 // ADMIN JOBS SERVICE
 // ============================================
@@ -18,30 +29,109 @@ export const adminJobsService = {
 
   // Create job
   create: async (job: Omit<Job, 'id'>): Promise<Job> => {
+    // Generate slug from title
+    const slug = job.slug || generateSlug(job.title);
+    
+    // Map camelCase to snake_case for database
+    const dbJob: any = {
+      title: job.title,
+      company: job.company,
+      slug: slug,
+      company_slug: job.companySlug || '',
+      logo: job.logo || '',
+      location: job.location || '',
+      province: job.province || '',
+      city: job.city || '',
+      type: job.type || 'Full Time',
+      category: job.category || 'Swasta',
+      category_color: job.categoryColor || job.category_color || 'blue',
+      education: job.education || '',
+      experience: job.experience || '',
+      description: job.description || '',
+      qualifications: job.qualifications || [],
+      benefits: job.benefits || [],
+      how_to_apply: job.howToApply || job.how_to_apply || '',
+      about_company: job.aboutCompany || job.about_company || '',
+      tags: job.tags || [],
+      majors: job.majors || [],
+      salary_range: job.salaryRange || job.salary_range || '',
+      due_date: job.dueDate || job.due_date || '',
+      pdf_embed_url: job.pdfEmbedUrl || job.pdf_embed_url || '',
+      video_embed_url: job.videoEmbedUrl || job.video_embed_url || '',
+      posted_date: new Date().toISOString().split('T')[0],
+      is_active: true,
+    };
+    
+    // Remove empty strings and undefined to make them optional
+    Object.keys(dbJob).forEach(key => {
+      if (dbJob[key] === undefined || dbJob[key] === '') delete dbJob[key];
+      // Keep required fields even if empty string
+      if (['title', 'company'].includes(key)) return;
+    });
+    
+    console.log('📤 Creating job:', dbJob);
+    
     const { data, error } = await supabase
       .from('jobs')
-      .insert([{
-        ...job,
-        posted_date: new Date().toISOString().split('T')[0],
-        created_at: new Date().toISOString(),
-      }])
+      .insert([dbJob])
       .select()
       .single();
     
-    if (error) throw error;
+    if (error) {
+      console.error('❌ Create job error:', error);
+      throw error;
+    }
+    
+    console.log('✅ Job created:', data);
     return data as Job;
   },
 
   // Update job
   update: async (id: number, job: Partial<Job>): Promise<Job> => {
+    // Map camelCase to snake_case for database
+    const dbJob: any = {};
+    
+    if (job.title !== undefined) dbJob.title = job.title;
+    if (job.company !== undefined) dbJob.company = job.company;
+    if (job.companySlug !== undefined) dbJob.company_slug = job.companySlug;
+    if (job.logo !== undefined) dbJob.logo = job.logo;
+    if (job.location !== undefined) dbJob.location = job.location;
+    if (job.province !== undefined) dbJob.province = job.province;
+    if (job.city !== undefined) dbJob.city = job.city;
+    if (job.type !== undefined) dbJob.type = job.type;
+    if (job.category !== undefined) dbJob.category = job.category;
+    if (job.categoryColor !== undefined) dbJob.category_color = job.categoryColor;
+    if (job.education !== undefined) dbJob.education = job.education;
+    if (job.experience !== undefined) dbJob.experience = job.experience;
+    if (job.description !== undefined) dbJob.description = job.description;
+    if (job.qualifications !== undefined) dbJob.qualifications = job.qualifications;
+    if (job.benefits !== undefined) dbJob.benefits = job.benefits;
+    if (job.howToApply !== undefined) dbJob.how_to_apply = job.howToApply;
+    if (job.aboutCompany !== undefined) dbJob.about_company = job.aboutCompany;
+    if (job.tags !== undefined) dbJob.tags = job.tags;
+    if (job.majors !== undefined) dbJob.majors = job.majors;
+    if (job.salaryRange !== undefined) dbJob.salary_range = job.salaryRange;
+    if (job.dueDate !== undefined) dbJob.due_date = job.dueDate;
+    if (job.pdfEmbedUrl !== undefined) dbJob.pdf_embed_url = job.pdfEmbedUrl;
+    if (job.videoEmbedUrl !== undefined) dbJob.video_embed_url = job.videoEmbedUrl;
+    if (job.is_active !== undefined) dbJob.is_active = job.is_active;
+    if (job.slug !== undefined) dbJob.slug = job.slug;
+    
+    console.log('📤 Updating job:', dbJob);
+    
     const { data, error } = await supabase
       .from('jobs')
-      .update(job)
+      .update(dbJob)
       .eq('id', id)
       .select()
       .single();
     
-    if (error) throw error;
+    if (error) {
+      console.error('❌ Update job error:', error);
+      throw error;
+    }
+    
+    console.log('✅ Job updated:', data);
     return data as Job;
   },
 
@@ -151,6 +241,18 @@ export const adminCompaniesService = {
 // ============================================
 // ADMIN BLOG SERVICE
 // ============================================
+
+// Helper function to map database fields to frontend interface
+const mapDbToFrontend = (dbPost: any): BlogPost => ({
+  id: dbPost.id,
+  title: dbPost.title,
+  category: dbPost.category,
+  description: dbPost.description,
+  content: dbPost.content,
+  image: dbPost.image,
+  posted: dbPost.posted_date,
+});
+
 export const adminBlogService = {
   getAll: async (): Promise<BlogPost[]> => {
     const { data, error } = await supabase
@@ -158,34 +260,70 @@ export const adminBlogService = {
       .select('*')
       .order('posted_date', { ascending: false });
     
-    if (error) throw error;
-    return data as BlogPost[];
+    if (error) {
+      console.error('Get all blog posts error:', error);
+      throw error;
+    }
+    
+    return (data || []).map(mapDbToFrontend);
   },
 
   create: async (post: Omit<BlogPost, 'id'>): Promise<BlogPost> => {
+    // Create object matching actual database column names
+    const dbPost: any = {
+      title: post.title,
+      slug: generateSlug(post.title) + '-' + Date.now(), // Add timestamp to ensure uniqueness
+      category: post.category,
+      posted_date: new Date().toISOString().split('T')[0],
+      is_published: true
+    };
+    
+    // Add optional fields if they have values
+    if (post.content) dbPost.content = post.content;
+    if (post.description) dbPost.description = post.description;
+    if (post.image) dbPost.image = post.image;
+    
+    console.log('📤 Sending blog post data:', dbPost);
+    
     const { data, error } = await supabase
       .from('blog_posts')
-      .insert([{
-        ...post,
-        posted_date: new Date().toISOString().split('T')[0],
-      }])
+      .insert([dbPost])
       .select()
       .single();
     
-    if (error) throw error;
-    return data as BlogPost;
+    if (error) {
+      console.error('❌ Create blog post error:', error);
+      throw error;
+    }
+    
+    console.log('✅ Blog post created:', data);
+    
+    return mapDbToFrontend(data);
   },
 
   update: async (id: number, post: Partial<BlogPost>): Promise<BlogPost> => {
+    // Only send fields that match actual database column names
+    const dbPost: any = {};
+    if (post.title) dbPost.title = post.title;
+    if (post.category) dbPost.category = post.category;
+    if (post.content !== undefined) dbPost.content = post.content;
+    if (post.image) dbPost.image = post.image;
+    if (post.description !== undefined) dbPost.description = post.description;
+    if (post.posted) dbPost.posted_date = post.posted;
+    
     const { data, error } = await supabase
       .from('blog_posts')
-      .update(post)
+      .update(dbPost)
       .eq('id', id)
       .select()
       .single();
     
-    if (error) throw error;
-    return data as BlogPost;
+    if (error) {
+      console.error('Update blog post error:', error);
+      throw error;
+    }
+    
+    return mapDbToFrontend(data);
   },
 
   delete: async (id: number): Promise<void> => {

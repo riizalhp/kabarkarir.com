@@ -44,27 +44,27 @@ const PelatihanCard: React.FC<{ pelatihan: PelatihanInfo; onSelectPelatihan: (id
     return (
         <div 
             onClick={() => onSelectPelatihan(pelatihan.id)}
-            className="bg-white rounded-lg shadow p-6 flex flex-col transition duration-300 hover:shadow-lg hover:-translate-y-1 cursor-pointer h-full relative"
+            className="bg-white rounded-lg shadow p-3 flex flex-col transition duration-300 hover:shadow-lg hover:-translate-y-1 cursor-pointer h-full relative"
         >
-            <button onClick={toggleFavorite} className={`absolute top-4 right-4 text-gray-400 hover:text-accent focus:outline-none text-xl transition-colors duration-200 z-10 ${isFavorite ? 'text-accent' : ''}`}>
+            <button onClick={toggleFavorite} className={`absolute top-2 right-2 text-gray-400 hover:text-accent focus:outline-none text-sm transition-colors duration-200 z-10 ${isFavorite ? 'text-accent' : ''}`}>
                 <i className={`${isFavorite ? 'fas' : 'far'} fa-bookmark`}></i>
             </button>
             
-            <span className="text-xs font-medium text-primary mb-2">{pelatihan.category}</span>
-            <h3 className="font-bold text-secondary text-lg mb-2 pr-8">{pelatihan.title}</h3>
-            <p className="text-sm text-gray-600 mb-4">{pelatihan.description}</p>
+            <span className="text-[9px] font-medium text-primary mb-1">{pelatihan.category}</span>
+            <h3 className="font-bold text-secondary text-xs mb-1.5 pr-6 line-clamp-2 leading-tight">{pelatihan.title}</h3>
+            <p className="text-[10px] text-gray-600 mb-2 line-clamp-2 leading-snug">{pelatihan.description}</p>
             
-            <div className="mt-auto pt-4 border-t border-gray-200 space-y-2 text-sm text-gray-700">
+            <div className="mt-auto pt-2 border-t border-gray-200 space-y-1 text-[10px] text-gray-700">
                 <div className="flex items-center">
-                    <i className="fas fa-building w-5 mr-2 text-gray-400" title="Penyelenggara"></i>
+                    <i className="fas fa-building w-3 mr-1.5 text-gray-400 text-[9px]" title="Penyelenggara"></i>
                     <span className="truncate">{pelatihan.organizer}</span>
                 </div>
                 <div className="flex items-center">
-                    <i className="far fa-calendar-alt w-5 mr-2 text-gray-400" title="Jadwal"></i>
+                    <i className="far fa-calendar-alt w-3 mr-1.5 text-gray-400 text-[9px]" title="Jadwal"></i>
                     <span className="truncate">{pelatihan.date}</span>
                 </div>
                 <div className="flex items-center">
-                    <i className="fas fa-map-marker-alt w-5 mr-2 text-gray-400" title="Lokasi"></i>
+                    <i className="fas fa-map-marker-alt w-3 mr-1.5 text-gray-400 text-[9px]" title="Lokasi"></i>
                     <span className="truncate">{pelatihan.location}</span>
                 </div>
             </div>
@@ -146,11 +146,11 @@ const PelatihanPage: React.FC<PelatihanPageProps> = ({ pelatihanList, onSelectPe
                     </div>
 
                     <div className="flex flex-col lg:flex-row gap-8">
-                        <div className="w-full lg:w-2/3">
+                        <div className="w-full lg:w-3/4">
                             <section id="featured-courses" className="py-6">
                                 {currentPelatihan.length > 0 ? (
                                     <>
-                                        <div className="grid grid-cols-1 gap-6">
+                                        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3">
                                             {currentPelatihan.map(pelatihan => (
                                                 <PelatihanCard key={pelatihan.id} pelatihan={pelatihan} onSelectPelatihan={onSelectPelatihan} />
                                             ))}

@@ -1,5 +1,5 @@
 import React from 'react';
-import { Routes, Route, Navigate, useParams } from 'react-router-dom';
+import { Routes, Route, Navigate, useParams, useSearchParams } from 'react-router-dom';
 import MainContent from './components/MainContent';
 import JobDetailPage from './components/JobDetailPage';
 import BlogPage from './components/BlogPage';
@@ -24,6 +24,7 @@ import PelatihanPage from './components/PelatihanPage';
 import PelatihanDetailPage from './components/PelatihanDetailPage';
 import AboutUsPage from './components/AboutUsPage';
 import Categories from './components/Categories';
+import SearchResultsPage from './components/SearchResultsPage';
 import { slugify } from './utils/slugify';
 import { Job, BlogPost, MisiCuanOffer, CompanyProfile, RecruitmentEvent, PelatihanInfo, Major, Tag, Category } from './types';
 
@@ -39,6 +40,7 @@ interface AppRoutesProps {
   companiesWithJobCount: (CompanyProfile & { jobsAvailable: number })[];
   trendingCompanies: (CompanyProfile & { jobsAvailable: number })[];
   dynamicCategories: Category[];
+  globalSearchQuery?: string;
 }
 
 const AppRoutes: React.FC<AppRoutesProps> = ({
@@ -50,7 +52,8 @@ const AppRoutes: React.FC<AppRoutesProps> = ({
   courses,
   companiesWithJobCount,
   trendingCompanies,
-  dynamicCategories
+  dynamicCategories,
+  globalSearchQuery = ''
 }) => {
   
   return (
@@ -61,6 +64,7 @@ const AppRoutes: React.FC<AppRoutesProps> = ({
           <Categories onSelectCategory={(cat) => window.location.href = `/kategori/${slugify(cat)}`} categories={dynamicCategories} />
           <MainContent 
             jobs={jobs} 
+            globalSearchQuery={globalSearchQuery}
             onSelectJob={(slug: string) => {
               const job = jobs.find((j: Job) => j.slug === slug);
               if (job) window.location.href = `/lowongan/${job.id}/${job.slug}`;
@@ -81,8 +85,8 @@ const AppRoutes: React.FC<AppRoutesProps> = ({
       } />
 
       {/* Job Routes */}
-      <Route path="/lowongan/:id/:slug" element={<JobDetailWrapper jobs={jobs} blogPosts={blogPosts} events={events} companies={companies} />} />
-      <Route path="/lowongan/:slug" element={<JobDetailWrapper jobs={jobs} blogPosts={blogPosts} events={events} companies={companies} />} />
+      <Route path="/lowongan/:id/:slug" element={<JobDetailWrapper jobs={jobs} blogPosts={blogPosts} events={events} companies={companies} trendingCompanies={trendingCompanies} />} />
+      <Route path="/lowongan/:slug" element={<JobDetailWrapper jobs={jobs} blogPosts={blogPosts} events={events} companies={companies} trendingCompanies={trendingCompanies} />} />
       <Route path="/kategori/:category" element={<JobCategoryWrapper jobs={jobs} blogPosts={blogPosts} events={events} trendingCompanies={trendingCompanies} />} />
       
       {/* Company Routes */}
@@ -112,6 +116,9 @@ const AppRoutes: React.FC<AppRoutesProps> = ({
       <Route path="/pasang-iklan" element={<PasangIklanPage />} />
       <Route path="/pasang-iklan/ongoing" element={<PasangIklanOnGoing />} />
       
+      {/* Search Route */}
+      <Route path="/search" element={<SearchResultsWrapper jobs={jobs} companies={companiesWithJobCount} blogPosts={blogPosts} misiOffers={misiOffers} />} />
+      
       {/* Other Routes */}
       <Route path="/favorit" element={<FavoritesWrapper jobs={jobs} blogPosts={blogPosts} events={events} trendingCompanies={trendingCompanies} />} />
       <Route path="/komunitas" element={<JoinTelegramPage />} />
@@ -127,7 +134,7 @@ const AppRoutes: React.FC<AppRoutesProps> = ({
 };
 
 // Wrapper components for route parameters
-const JobDetailWrapper: React.FC<any> = ({ jobs, blogPosts, events, companies }) => {
+const JobDetailWrapper: React.FC<any> = ({ jobs, blogPosts, events, companies, trendingCompanies }) => {
   const { id, slug } = useParams<{ id: string; slug: string }>();
   
   // Find by ID first (primary), slug is just for SEO
@@ -157,6 +164,9 @@ const JobDetailWrapper: React.FC<any> = ({ jobs, blogPosts, events, companies })
           if (event) window.location.href = `/event/${event.id}/${event.slug}`;
         }}
         onSelectCompany={(slug) => window.location.href = `/perusahaan/${slug}`}
+        trendingCompanies={trendingCompanies}
+        latestArticles={blogPosts.slice(0, 3)}
+        allEvents={events}
       />
   );
 };
@@ -480,6 +490,29 @@ const FavoritesWrapper: React.FC<any> = ({ jobs, blogPosts, events, trendingComp
       trendingCompanies={trendingCompanies}
       latestArticles={blogPosts.slice(0,3)}
       allEvents={events}
+    />
+  );
+};
+
+const SearchResultsWrapper: React.FC<any> = ({ jobs, companies, blogPosts, misiOffers }) => {
+  const [searchParams] = useSearchParams();
+  const searchQuery = searchParams.get('q') || '';
+  
+  return (
+    <SearchResultsPage 
+      searchQuery={searchQuery}
+      jobs={jobs}
+      companies={companies}
+      blogPosts={blogPosts}
+      misiOffers={misiOffers}
+      onSelectJob={(jobSlug: string) => {
+        const job = jobs.find((j: Job) => j.slug === jobSlug);
+        if (job) window.location.href = `/lowongan/${job.id}/${job.slug}`;
+      }}
+      onSelectCategory={(cat) => window.location.href = `/kategori/${slugify(cat)}`}
+      onSelectCompany={(slug) => window.location.href = `/perusahaan/${slug}`}
+      onSelectArticle={(slug) => window.location.href = `/blog/${slug}`}
+      onSelectMisi={(slug) => window.location.href = `/misi-cuan/${slug}`}
     />
   );
 };

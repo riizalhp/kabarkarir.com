@@ -50,22 +50,26 @@ const MisiCuanPage: React.FC<MisiCuanPageProps> = ({ offers, onSelectMisi, onNav
     <section className="py-10 px-4 bg-gray-50">
       <div className="container mx-auto">
         {/* Search Bar */}
-        <div className="max-w-2xl mx-auto mb-8">
+        <div className="bg-white p-4 rounded-lg shadow-md mb-8">
+          <div className="max-w-2xl mx-auto">
+            <label htmlFor="misi-search" className="block text-sm font-medium text-gray-700 mb-1">Cari Misi Cuan</label>
             <div className="relative">
-                <i className="fas fa-search absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-400"></i>
-                <input 
-                    type="text" 
-                    placeholder="Cari misi berdasarkan judul atau perusahaan..."
-                    value={searchTerm}
-                    onChange={e => setSearchTerm(e.target.value)}
-                    className="w-full py-3 px-4 pl-12 focus:outline-none rounded-full border border-gray-300 focus:border-primary focus:ring-2 focus:ring-primary/50"
-                />
+              <i className="fas fa-search absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400"></i>
+              <input 
+                type="text" 
+                id="misi-search"
+                placeholder="Cari berdasarkan judul atau perusahaan..."
+                value={searchTerm}
+                onChange={e => setSearchTerm(e.target.value)}
+                className="w-full py-2 px-3 pl-10 focus:outline-none rounded-md border border-gray-300 focus:border-primary focus:ring-1 focus:ring-primary"
+              />
             </div>
+          </div>
         </div>
 
         <div className="flex flex-col lg:flex-row gap-8">
-            <div className="w-full lg:w-2/3">
-                <div className="space-y-6">
+            <div className="w-full lg:w-3/4">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
                 {currentOffers.length > 0 ? (
                     <>
                       {currentOffers.map(offer => (

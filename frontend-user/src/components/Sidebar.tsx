@@ -7,24 +7,24 @@ interface TrendingCompaniesProps {
 }
 
 const TrendingCompanies: React.FC<TrendingCompaniesProps> = ({ companies }) => (
-  <div className="bg-white rounded-lg shadow mb-6">
-    <div className="bg-secondary text-white p-4 rounded-t-lg">
-      <h3 className="font-semibold">Perusahaan Trending</h3>
+  <div className="bg-white rounded-lg shadow mb-4">
+    <div className="bg-secondary text-white p-2.5 rounded-t-lg">
+      <h3 className="font-semibold text-xs">Perusahaan Trending</h3>
     </div>
-    <div className="p-4 space-y-2">
+    <div className="p-2.5 space-y-1.5">
       {companies.map(company => (
-        <a href="#" key={company.name} className="flex items-center hover:bg-gray-50 p-2 rounded transition">
-          <div className="bg-gray-100 rounded w-10 h-10 flex items-center justify-center shrink-0">
-            <img src={company.logo} alt={company.name} className="w-8 h-8 object-contain" />
+        <a href="#" key={company.name} className="flex items-center hover:bg-gray-50 p-1.5 rounded transition">
+          <div className="bg-gray-100 rounded w-8 h-8 flex items-center justify-center shrink-0">
+            <img src={company.logo} alt={company.name} className="w-6 h-6 object-contain" />
           </div>
-          <div className="ml-3 flex-1">
-            <h4 className="font-medium text-secondary hover:text-primary text-sm transition-colors">{company.name}</h4>
-            <div className="flex items-center gap-3 text-xs text-gray-500">
+          <div className="ml-2 flex-1 min-w-0">
+            <h4 className="font-medium text-secondary hover:text-primary text-[11px] transition-colors truncate">{company.name}</h4>
+            <div className="flex items-center gap-2 text-[9px] text-gray-500">
               <span>{company.jobsAvailable} lowongan</span>
-              {(company as any).view_count && (
-                <span className="flex items-center gap-1">
-                  <i className="fas fa-eye text-primary"></i>
-                  {(company as any).view_count} views
+              {(company as any).view_count > 0 && (
+                <span className="flex items-center gap-0.5">
+                  <i className="fas fa-eye text-primary text-[8px]"></i>
+                  {(company as any).view_count}
                 </span>
               )}
             </div>
@@ -46,32 +46,32 @@ interface SidebarProps {
 }
 
 const LatestArticlesWidget: React.FC<Pick<SidebarProps, 'onNavigateToBlog' | 'latestArticles'>> = ({ onNavigateToBlog, latestArticles }) => (
-  <div className="bg-white rounded-lg shadow mb-6">
-    <div className="bg-secondary text-white p-4 rounded-t-lg">
-      <h3 className="font-semibold">Artikel Terbaru</h3>
+  <div className="bg-white rounded-lg shadow mb-4">
+    <div className="bg-secondary text-white p-2.5 rounded-t-lg">
+      <h3 className="font-semibold text-xs">Artikel Terbaru</h3>
     </div>
-    <div className="p-4">
-      <div className="space-y-2">
+    <div className="p-2.5">
+      <div className="space-y-1.5">
         {latestArticles.map(article => (
-          <a href={`/blog/${article.slug || article.id}`} key={article.id} className="block hover:bg-gray-50 p-2 rounded transition">
-            <h4 className="font-medium text-secondary hover:text-primary text-sm transition-colors">{article.title}</h4>
-            <div className="flex items-center gap-3 text-xs text-gray-500 mt-1">
+          <a href={`/blog/${article.slug || article.id}`} key={article.id} className="block hover:bg-gray-50 p-1.5 rounded transition">
+            <h4 className="font-medium text-secondary hover:text-primary text-[11px] transition-colors line-clamp-2 leading-tight">{article.title}</h4>
+            <div className="flex items-center gap-2 text-[9px] text-gray-500 mt-0.5">
               <span>{article.posted}</span>
               {article.view_count && (
-                <span className="flex items-center gap-1">
-                  <i className="fas fa-eye text-primary"></i>
-                  {article.view_count} views
+                <span className="flex items-center gap-0.5">
+                  <i className="fas fa-eye text-primary text-[8px]"></i>
+                  {article.view_count}
                 </span>
               )}
             </div>
           </a>
         ))}
       </div>
-      <div className="mt-4 text-center">
+      <div className="mt-2.5 text-center">
         <a href="#" onClick={(e) => {
           e.preventDefault();
           onNavigateToBlog();
-        }} className="text-secondary text-sm font-medium hover:text-primary">
+        }} className="text-secondary text-[10px] font-medium hover:text-primary">
           Lihat semua artikel
         </a>
       </div>
@@ -80,40 +80,40 @@ const LatestArticlesWidget: React.FC<Pick<SidebarProps, 'onNavigateToBlog' | 'la
 );
 
 const RecruitmentEvents: React.FC<Pick<SidebarProps, 'onNavigateToEventRecruitment' | 'onSelectEvent' | 'allEvents'>> = ({ onNavigateToEventRecruitment, onSelectEvent, allEvents }) => (
-    <div className="bg-white rounded-lg shadow mb-6">
-        <div className="bg-accent text-white p-4 rounded-t-lg">
-            <h3 className="font-semibold">Event Rekrutmen</h3>
+    <div className="bg-white rounded-lg shadow mb-4">
+        <div className="bg-accent text-white p-2.5 rounded-t-lg">
+            <h3 className="font-semibold text-xs">Event Rekrutmen</h3>
         </div>
-        <div className="p-4 space-y-4">
+        <div className="p-2.5 space-y-2">
             {allEvents.slice(0, 2).map(event => (
-                <div key={event.id} className={`${event.isFeatured ? 'border-accent border-dashed' : 'border-gray-200'} border rounded-lg p-4`}>
-                    <h4 className="font-semibold text-secondary">{event.title}</h4>
-                    <div className="flex items-center text-xs text-gray-500 mt-2">
-                        <i className="far fa-calendar-alt mr-2"></i> 
+                <div key={event.id} className={`${event.isFeatured ? 'border-accent border-dashed' : 'border-gray-200'} border rounded-lg p-2`}>
+                    <h4 className="font-semibold text-secondary text-[11px] line-clamp-2 leading-tight">{event.title}</h4>
+                    <div className="flex items-center text-[9px] text-gray-500 mt-1">
+                        <i className="far fa-calendar-alt mr-1 text-[8px]"></i> 
                         <span>{event.date}</span>
                     </div>
-                    <div className="flex items-center text-xs text-gray-500 mt-1">
-                        <i className="fas fa-map-marker-alt mr-2"></i> 
-                        <span>{event.location}</span>
+                    <div className="flex items-center text-[9px] text-gray-500 mt-0.5">
+                        <i className="fas fa-map-marker-alt mr-1 text-[8px]"></i> 
+                        <span className="truncate">{event.location}</span>
                     </div>
                     {event.view_count && (
-                        <div className="flex items-center text-xs text-gray-500 mt-1">
-                            <i className="fas fa-eye text-primary mr-2"></i>
-                            <span>{event.view_count} views</span>
+                        <div className="flex items-center text-[9px] text-gray-500 mt-0.5">
+                            <i className="fas fa-eye text-primary mr-1 text-[8px]"></i>
+                            <span>{event.view_count}</span>
                         </div>
                     )}
-                    <div className="mt-3">
-                        <a href="#" onClick={(e) => { e.preventDefault(); onSelectEvent(event.slug || String(event.id)); }} className="text-secondary text-xs font-medium hover:text-primary">
+                    <div className="mt-1.5">
+                        <a href="#" onClick={(e) => { e.preventDefault(); onSelectEvent(event.slug || String(event.id)); }} className="text-secondary text-[10px] font-medium hover:text-primary">
                             Lihat Detail
                         </a>
                     </div>
                 </div>
             ))}
-             <div className="mt-4 text-center">
+             <div className="mt-2.5 text-center">
                 <a href="#" onClick={(e) => {
                     e.preventDefault();
                     onNavigateToEventRecruitment();
-                }} className="text-secondary text-sm font-medium hover:text-primary">
+                }} className="text-secondary text-[10px] font-medium hover:text-primary">
                     Lihat semua event
                 </a>
             </div>
@@ -122,13 +122,13 @@ const RecruitmentEvents: React.FC<Pick<SidebarProps, 'onNavigateToEventRecruitme
 );
 
 const DownloadAppBanner: React.FC = () => (
-    <div className="bg-gradient-to-r from-primary to-secondary rounded-lg shadow p-5">
+    <div className="bg-gradient-to-r from-primary to-secondary rounded-lg shadow p-3">
         <div className="text-white">
-            <h3 className="font-semibold text-lg">Download Aplikasi KabarKarir.com</h3>
-            <p className="text-white text-opacity-90 text-sm mt-2">Akses lowongan kerja terbaru kapan saja dan di mana saja</p>
-            <div className="mt-4">
-                <a href="#" className="bg-white text-primary py-2 px-4 rounded-full text-sm font-medium inline-flex items-center transition hover:bg-gray-200">
-                    <i className="fab fa-google-play mr-2"></i> Google Play
+            <h3 className="font-semibold text-sm">Download Aplikasi KabarKarir.com</h3>
+            <p className="text-white text-opacity-90 text-xs mt-1.5 leading-snug">Akses lowongan kerja terbaru kapan saja dan di mana saja</p>
+            <div className="mt-2.5">
+                <a href="#" className="bg-white text-primary py-1.5 px-3 rounded-full text-xs font-medium inline-flex items-center transition hover:bg-gray-200">
+                    <i className="fab fa-google-play mr-1.5"></i> Google Play
                 </a>
             </div>
         </div>
@@ -141,7 +141,7 @@ const Sidebar: React.FC<SidebarProps> = ({ onNavigateToBlog, onNavigateToEventRe
   }
   
   return (
-    <aside className="w-full lg:w-1/3">
+    <aside className="w-full lg:w-1/4">
       <TrendingCompanies companies={trendingCompanies} />
       <LatestArticlesWidget onNavigateToBlog={onNavigateToBlog} latestArticles={latestArticles} />
       <RecruitmentEvents onNavigateToEventRecruitment={onNavigateToEventRecruitment} onSelectEvent={onSelectEvent} allEvents={allEvents} />

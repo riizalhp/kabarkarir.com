@@ -45,12 +45,15 @@ export interface Job {
   qualifications: string[];
   benefits: string[];
   howToApply: string;
-  aboutCompany: string;
+  aboutCompany?: string; // Frontend field (for backward compatibility)
+  about_company?: string; // Database field
   experience: string;
   tags: string[];
   majors?: string[];
-  pdfEmbedUrl?: string;
-  videoEmbedUrl?: string;
+  pdfEmbedUrl?: string; // Frontend field
+  pdf_embed_url?: string; // Database field
+  videoEmbedUrl?: string; // Frontend field
+  video_embed_url?: string; // Database field
   dueDate?: string;
   salaryRange?: string;
 }
